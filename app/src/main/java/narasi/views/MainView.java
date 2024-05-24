@@ -27,7 +27,7 @@ public class MainView extends Application {
         HBox topBar = new HBox();
         topBar.setPadding(new Insets(10));
         topBar.setSpacing(10);
-        topBar.setAlignment(Pos.TOP_RIGHT); // Menempatkan elemen di pojok kanan atas
+        topBar.setAlignment(Pos.TOP_RIGHT);
 
         Button loginButton = new Button("Login");
         loginButton.setOnAction(event -> {
@@ -38,19 +38,24 @@ public class MainView extends Application {
         TextField searchField = new TextField();
         searchField.setPromptText("Search...");
 
-        topBar.getChildren().addAll(searchField, loginButton); 
+        topBar.getChildren().addAll(searchField, loginButton);
 
         VBox sidebar = new VBox();
         sidebar.setPadding(new Insets(10));
         sidebar.setSpacing(10);
+        sidebar.setPrefWidth(150);  
 
         Button jenisKaryaButton = new Button("Jenis Karya");
+        jenisKaryaButton.setMinWidth(150); 
         VBox jenisKaryaSubButtons = new VBox();
         jenisKaryaSubButtons.setPadding(new Insets(5));
         jenisKaryaSubButtons.setSpacing(5);
         Button novelButton = new Button("Novel");
+        novelButton.setMinWidth(150);
         Button cerpenButton = new Button("Cerpen");
+        cerpenButton.setMinWidth(150);
         Button puisiButton = new Button("Puisi");
+        puisiButton.setMinWidth(150);
 
         jenisKaryaButton.setOnAction(event -> {
             if (jenisKaryaSubButtons.getChildren().isEmpty()) {
@@ -61,15 +66,22 @@ public class MainView extends Application {
         });
 
         Button genreButton = new Button("Genre");
+        genreButton.setMinWidth(150);
         VBox genreSubButtons = new VBox();
         genreSubButtons.setPadding(new Insets(5));
         genreSubButtons.setSpacing(5);
         Button fantasiButton = new Button("Fantasi");
+        fantasiButton.setMinWidth(150);
         Button romantisButton = new Button("Romantis");
+        romantisButton.setMinWidth(150);
         Button misteriButton = new Button("Misteri");
+        misteriButton.setMinWidth(150);
         Button thrillerButton = new Button("Thriller");
+        thrillerButton.setMinWidth(150);
         Button komediButton = new Button("Komedi");
+        komediButton.setMinWidth(150);
         Button dramaButton = new Button("Drama");
+        dramaButton.setMinWidth(150);
 
         genreButton.setOnAction(event -> {
             if (genreSubButtons.getChildren().isEmpty()) {
@@ -80,15 +92,22 @@ public class MainView extends Application {
         });
 
         Button temaButton = new Button("Tema");
+        temaButton.setMinWidth(150);
         VBox temaSubButtons = new VBox();
         temaSubButtons.setPadding(new Insets(5));
         temaSubButtons.setSpacing(5);
         Button cintaButton = new Button("Cinta");
+        cintaButton.setMinWidth(150);
         Button kehilanganButton = new Button("Kehilangan");
+        kehilanganButton.setMinWidth(150);
         Button penemuanDiriButton = new Button("Penemuan diri");
+        penemuanDiriButton.setMinWidth(150);
         Button keadilanSosialButton = new Button("Keadilan sosial");
+        keadilanSosialButton.setMinWidth(150);
         Button sejarahButton = new Button("Sejarah");
+        sejarahButton.setMinWidth(150);
         Button budayaButton = new Button("Budaya");
+        budayaButton.setMinWidth(150);
 
         temaButton.setOnAction(event -> {
             if (temaSubButtons.getChildren().isEmpty()) {
@@ -102,13 +121,12 @@ public class MainView extends Application {
                                       genreButton, createScrollPane(genreSubButtons),
                                       temaButton, createScrollPane(temaSubButtons));
 
-       
         ScrollPane contentScrollPane = new ScrollPane();
         contentScrollPane.setFitToWidth(true);
-        VBox.setVgrow(contentScrollPane, Priority.ALWAYS); 
+        contentScrollPane.setFitToHeight(true);
+        contentScrollPane.setPadding(new Insets(10, 10, 10, 15));
 
         ListView<Work> workListView = new ListView<>();
-
         contentScrollPane.setContent(workListView);
 
         root.setTop(topBar);
@@ -118,7 +136,8 @@ public class MainView extends Application {
         MainController controller = new MainController(searchField, workListView);
         controller.init();
 
-        primaryStage.setScene(new Scene(root, 800, 600));
+        Scene scene = new Scene(root, 1000, 600);
+        primaryStage.setScene(scene);
         primaryStage.show();
     }
 
@@ -128,11 +147,8 @@ public class MainView extends Application {
         scrollPane.setFitToWidth(true);
         return scrollPane;
     }
-    
-    
 
     public static void main(String[] args) {
         launch(args);
     }
-    
 }
