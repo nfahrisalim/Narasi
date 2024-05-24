@@ -1,6 +1,8 @@
 // class induk 
 
+import java.util.List;
+
 public interface Searchable {
-    void SearchByTitle(String title); 
-    void SearchByTag(String tag);
+    List<Work> searchByTitle(String title);
+    List<Work> searchByTag(String tag);
 }

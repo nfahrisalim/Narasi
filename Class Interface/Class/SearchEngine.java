@@ -1,14 +1,18 @@
 
 // interface implements
 
+import java.util.List;
+
 public class SearchEngine implements Searchable {
     @Override
-    public void SearchByTitle(String title) {
-        // method
+    public List<Work> searchByTitle(String title) {
+        // method title
+        return null;
     }
 
     @Override
-    public void SearchByTag(String tag) {
-        // method
+    public List<Work> searchByTag(String tag) {
+        // method tag
+        return null;
     }
 }
