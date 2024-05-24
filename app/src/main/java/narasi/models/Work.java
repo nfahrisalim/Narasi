@@ -10,6 +10,14 @@ public class Work {
     private List<Comment> comments;
     private int kudosCount;
 
+    public Work() {
+        this.title = "";
+        this.content = "";
+        this.tags = "";
+        this.comments = new ArrayList<>();
+        this.kudosCount = 0;
+    }
+
     public Work(String title, String content, String tags) {
         this.title = title;
         this.content = content;
@@ -65,5 +73,4 @@ public class Work {
     public void setKudosCount(int kudosCount) {
         this.kudosCount = kudosCount;
     }
-    
 }
