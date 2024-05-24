@@ -1,5 +1,7 @@
 package narasi.views;
 
+import java.util.List;
+
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -14,9 +16,12 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import narasi.controllers.MainController;
+import narasi.models.SearchEngine;
 import narasi.models.Work;
 
 public class MainView extends Application {
+
+    private ListView<Work> workListView;
 
     @Override
     public void start(Stage primaryStage) {
@@ -37,6 +42,14 @@ public class MainView extends Application {
 
         TextField searchField = new TextField();
         searchField.setPromptText("Search...");
+
+        Button searchButton = new Button("Search");
+        searchButton.setOnAction(event -> {
+            String query = searchField.getText();
+            SearchEngine searchEngine = new SearchEngine();
+            List<Work> searchResults = searchEngine.search(query);
+            workListView.getItems().setAll(searchResults);
+        });
 
         topBar.getChildren().addAll(searchField, loginButton);
 
@@ -83,6 +96,42 @@ public class MainView extends Application {
         Button dramaButton = new Button("Drama");
         dramaButton.setMinWidth(120);
 
+        fantasiButton.setOnAction(event -> {
+            SearchEngine searchEngine = new SearchEngine();
+            List<Work> searchResults = searchEngine.searchByTag("Fantasi");
+            workListView.getItems().setAll(searchResults);
+        });
+
+        romantisButton.setOnAction(event -> {
+            SearchEngine searchEngine = new SearchEngine();
+            List<Work> searchResults = searchEngine.searchByTag("Romantis");
+            workListView.getItems().setAll(searchResults);
+        });
+
+        misteriButton.setOnAction(event -> {
+            SearchEngine searchEngine = new SearchEngine();
+            List<Work> searchResults = searchEngine.searchByTag("Misteri");
+            workListView.getItems().setAll(searchResults);
+        });
+
+        thrillerButton.setOnAction(event -> {
+            SearchEngine searchEngine = new SearchEngine();
+            List<Work> searchResults = searchEngine.searchByTag("Thriller");
+            workListView.getItems().setAll(searchResults);
+        });
+
+        komediButton.setOnAction(event -> {
+            SearchEngine searchEngine = new SearchEngine();
+            List<Work> searchResults = searchEngine.searchByTag("Komedi");
+            workListView.getItems().setAll(searchResults);
+        });
+
+        dramaButton.setOnAction(event -> {
+            SearchEngine searchEngine = new SearchEngine();
+            List<Work> searchResults = searchEngine.searchByTag("Drama");
+            workListView.getItems().setAll(searchResults);
+        });
+
         genreButton.setOnAction(event -> {
             if (genreSubButtons.getChildren().isEmpty()) {
                 genreSubButtons.getChildren().addAll(fantasiButton, romantisButton, misteriButton, thrillerButton, komediButton, dramaButton);
@@ -109,6 +158,42 @@ public class MainView extends Application {
         Button budayaButton = new Button("Budaya");
         budayaButton.setMinWidth(120);
 
+        cintaButton.setOnAction(event -> {
+            SearchEngine searchEngine = new SearchEngine();
+            List<Work> searchResults = searchEngine.searchByTag("Cinta");
+            workListView.getItems().setAll(searchResults);
+        });
+
+        kehilanganButton.setOnAction(event -> {
+            SearchEngine searchEngine = new SearchEngine();
+            List<Work> searchResults = searchEngine.searchByTag("Kehilangan");
+            workListView.getItems().setAll(searchResults);
+        });
+
+        penemuanDiriButton.setOnAction(event -> {
+            SearchEngine searchEngine = new SearchEngine();
+            List<Work> searchResults = searchEngine.searchByTag("Penemuan diri");
+            workListView.getItems().setAll(searchResults);
+        });
+
+        keadilanSosialButton.setOnAction(event -> {
+            SearchEngine searchEngine = new SearchEngine();
+            List<Work> searchResults = searchEngine.searchByTag("Keadilan sosial");
+            workListView.getItems().setAll(searchResults);
+        });
+
+        sejarahButton.setOnAction(event -> {
+            SearchEngine searchEngine = new SearchEngine();
+            List<Work> searchResults = searchEngine.searchByTag("Sejarah");
+            workListView.getItems().setAll(searchResults);
+        });
+
+        budayaButton.setOnAction(event -> {
+            SearchEngine searchEngine = new SearchEngine();
+            List<Work> searchResults = searchEngine.searchByTag("Budaya");
+            workListView.getItems().setAll(searchResults);
+        });
+
         temaButton.setOnAction(event -> {
             if (temaSubButtons.getChildren().isEmpty()) {
                 temaSubButtons.getChildren().addAll(cintaButton, kehilanganButton, penemuanDiriButton, keadilanSosialButton, sejarahButton, budayaButton);
@@ -126,7 +211,7 @@ public class MainView extends Application {
         contentScrollPane.setFitToHeight(true);
         contentScrollPane.setPadding(new Insets(10, 10, 10, 15));
 
-        ListView<Work> workListView = new ListView<>();
+        workListView = new ListView<>(); 
         contentScrollPane.setContent(workListView);
 
         root.setTop(topBar);
