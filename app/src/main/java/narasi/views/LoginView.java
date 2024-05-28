@@ -8,6 +8,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import narasi.models.DBManager;
 
 
 public class LoginView {
@@ -44,9 +45,19 @@ public class LoginView {
         grid.add(registerButton, 1, 2);
 
         loginButton.setOnAction(event -> {
-         
-            stage.close();
+            String username = usernameField.getText();
+            String password = passwordField.getText();
+
+            boolean success = DBManager.loginUser(username, password);
+            if (success) {
+                System.out.println("Login berhasil!");
+                stage.close();
+                
+            } else {
+                System.out.println("Login gagal. Silakan coba lagi.");
+            }
         });
+
 
 
         registerButton.setOnAction(event -> {

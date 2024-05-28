@@ -12,17 +12,19 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import narasi.controllers.MainController;
-import narasi.models.SearchEngine;
+import narasi.models.DBManager;
 import narasi.models.Work;
+
 
 public class MainView extends Application {
 
     private ListView<Work> workListView;
 
+
+    
     @Override
     public void start(Stage primaryStage) {
         primaryStage.setTitle("Narasi - Platform Karya Tulis Mahasiswa");
@@ -46,20 +48,19 @@ public class MainView extends Application {
         Button searchButton = new Button("Search");
         searchButton.setOnAction(event -> {
             String query = searchField.getText();
-            SearchEngine searchEngine = new SearchEngine();
-            List<Work> searchResults = searchEngine.search(query);
+            List<Work> searchResults = DBManager.searchWorksByTitle(query);
             workListView.getItems().setAll(searchResults);
         });
 
-        topBar.getChildren().addAll(searchField, loginButton);
+        topBar.getChildren().addAll(searchField, searchButton, loginButton);
 
         VBox sidebar = new VBox();
         sidebar.setPadding(new Insets(20));
         sidebar.setSpacing(20);
-        sidebar.setPrefWidth(200);  
+        sidebar.setPrefWidth(200);
 
         Button jenisKaryaButton = new Button("Jenis Karya");
-        jenisKaryaButton.setMinWidth(120); 
+        jenisKaryaButton.setMinWidth(120);
         VBox jenisKaryaSubButtons = new VBox();
         jenisKaryaSubButtons.setPadding(new Insets(7));
         jenisKaryaSubButtons.setSpacing(5);
@@ -97,38 +98,32 @@ public class MainView extends Application {
         dramaButton.setMinWidth(120);
 
         fantasiButton.setOnAction(event -> {
-            SearchEngine searchEngine = new SearchEngine();
-            List<Work> searchResults = searchEngine.searchByTag("Fantasi");
+            List<Work> searchResults = DBManager.searchWorksByTag("Fantasi");
             workListView.getItems().setAll(searchResults);
         });
 
         romantisButton.setOnAction(event -> {
-            SearchEngine searchEngine = new SearchEngine();
-            List<Work> searchResults = searchEngine.searchByTag("Romantis");
+            List<Work> searchResults = DBManager.searchWorksByTag("Romantis");
             workListView.getItems().setAll(searchResults);
         });
 
         misteriButton.setOnAction(event -> {
-            SearchEngine searchEngine = new SearchEngine();
-            List<Work> searchResults = searchEngine.searchByTag("Misteri");
+            List<Work> searchResults = DBManager.searchWorksByTag("Misteri");
             workListView.getItems().setAll(searchResults);
         });
 
         thrillerButton.setOnAction(event -> {
-            SearchEngine searchEngine = new SearchEngine();
-            List<Work> searchResults = searchEngine.searchByTag("Thriller");
+            List<Work> searchResults = DBManager.searchWorksByTag("Thriller");
             workListView.getItems().setAll(searchResults);
         });
 
         komediButton.setOnAction(event -> {
-            SearchEngine searchEngine = new SearchEngine();
-            List<Work> searchResults = searchEngine.searchByTag("Komedi");
+            List<Work> searchResults = DBManager.searchWorksByTag("Komedi");
             workListView.getItems().setAll(searchResults);
         });
 
         dramaButton.setOnAction(event -> {
-            SearchEngine searchEngine = new SearchEngine();
-            List<Work> searchResults = searchEngine.searchByTag("Drama");
+            List<Work> searchResults = DBManager.searchWorksByTag("Drama");
             workListView.getItems().setAll(searchResults);
         });
 
@@ -159,38 +154,32 @@ public class MainView extends Application {
         budayaButton.setMinWidth(120);
 
         cintaButton.setOnAction(event -> {
-            SearchEngine searchEngine = new SearchEngine();
-            List<Work> searchResults = searchEngine.searchByTag("Cinta");
+            List<Work> searchResults = DBManager.searchWorksByTag("Cinta");
             workListView.getItems().setAll(searchResults);
         });
 
         kehilanganButton.setOnAction(event -> {
-            SearchEngine searchEngine = new SearchEngine();
-            List<Work> searchResults = searchEngine.searchByTag("Kehilangan");
+            List<Work> searchResults = DBManager.searchWorksByTag("Kehilangan");
             workListView.getItems().setAll(searchResults);
         });
 
         penemuanDiriButton.setOnAction(event -> {
-            SearchEngine searchEngine = new SearchEngine();
-            List<Work> searchResults = searchEngine.searchByTag("Penemuan diri");
+            List<Work> searchResults = DBManager.searchWorksByTag("Penemuan diri");
             workListView.getItems().setAll(searchResults);
         });
 
         keadilanSosialButton.setOnAction(event -> {
-            SearchEngine searchEngine = new SearchEngine();
-            List<Work> searchResults = searchEngine.searchByTag("Keadilan sosial");
+            List<Work> searchResults = DBManager.searchWorksByTag("Keadilan sosial");
             workListView.getItems().setAll(searchResults);
         });
 
         sejarahButton.setOnAction(event -> {
-            SearchEngine searchEngine = new SearchEngine();
-            List<Work> searchResults = searchEngine.searchByTag("Sejarah");
+            List<Work> searchResults = DBManager.searchWorksByTag("Sejarah");
             workListView.getItems().setAll(searchResults);
         });
 
         budayaButton.setOnAction(event -> {
-            SearchEngine searchEngine = new SearchEngine();
-            List<Work> searchResults = searchEngine.searchByTag("Budaya");
+            List<Work> searchResults = DBManager.searchWorksByTag("Budaya");
             workListView.getItems().setAll(searchResults);
         });
 
@@ -198,20 +187,19 @@ public class MainView extends Application {
             if (temaSubButtons.getChildren().isEmpty()) {
                 temaSubButtons.getChildren().addAll(cintaButton, kehilanganButton, penemuanDiriButton, keadilanSosialButton, sejarahButton, budayaButton);
             } else {
-                temaSubButtons.getChildren().clear();
+            temaSubButtons.getChildren().clear();
             }
-        });
-
-        sidebar.getChildren().addAll(jenisKaryaButton, createScrollPane(jenisKaryaSubButtons),
-                                      genreButton, createScrollPane(genreSubButtons),
-                                      temaButton, createScrollPane(temaSubButtons));
+            });
+            sidebar.getChildren().addAll(jenisKaryaButton, createScrollPane(jenisKaryaSubButtons),
+                                  genreButton, createScrollPane(genreSubButtons),
+                                  temaButton, createScrollPane(temaSubButtons));
 
         ScrollPane contentScrollPane = new ScrollPane();
         contentScrollPane.setFitToWidth(true);
         contentScrollPane.setFitToHeight(true);
         contentScrollPane.setPadding(new Insets(10, 10, 10, 15));
 
-        workListView = new ListView<>(); 
+        workListView = new ListView<>();
         contentScrollPane.setContent(workListView);
 
         root.setTop(topBar);
@@ -230,11 +218,17 @@ public class MainView extends Application {
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.setContent(content);
         scrollPane.setFitToWidth(true);
-        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER); 
+        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         return scrollPane;
     }
 
+    
+
+    
+
     public static void main(String[] args) {
         launch(args);
+        
     }
 }
+

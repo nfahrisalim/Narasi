@@ -26,13 +26,7 @@ public class Work {
         this.kudosCount = 0;
     }
 
-    public void addComment(Comment comment) {
-        comments.add(comment);
-    }
-
-    public void addKudos() {
-        kudosCount++;
-    }
+    // Getters and setters...
 
     public String getTitle() {
         return title;

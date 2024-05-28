@@ -7,6 +7,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
+import narasi.models.DBManager;
 import narasi.models.RegisteredUser;
 
 public class RegisterView {
@@ -58,11 +59,14 @@ public class RegisterView {
             String email = emailField.getText();
             String anonymousId = anonymousIdField.getText();
 
-            RegisteredUser newUser = new RegisteredUser(username, password, fullName, email, anonymousId);
-
-            stage.close();
-
-            loginView.showLogin();
+            boolean success = DBManager.registerUser(username, password, fullName, email, anonymousId);
+            if (success) {
+                System.out.println("Registrasi berhasil!");
+                stage.close();
+                loginView.showLogin();
+            } else {
+                System.out.println("Registrasi gagal. Silakan coba lagi.");
+            }
         });
 
         Scene scene = new Scene(grid, 300, 250);

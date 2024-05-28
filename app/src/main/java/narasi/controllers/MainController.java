@@ -1,11 +1,13 @@
 package narasi.controllers;
 
-import javafx.scene.control.ListView;
-import javafx.scene.control.TextField;
-import narasi.models.Work;
-
-import java.util.ArrayList;
 import java.util.List;
+import javafx.scene.control.TextField;
+import javafx.scene.control.ListView;
+import narasi.models.Work;
+import narasi.models.DBManager;
+
+
+
 
 public class MainController {
 
@@ -18,7 +20,11 @@ public class MainController {
     }
 
     public void init() {
-        // Implement initialization logic here
+        searchField.setOnAction(event -> {
+            String query = searchField.getText();
+            List<Work> searchResults = DBManager.searchWorksByTitle(query);
+            workListView.getItems().setAll(searchResults);
+        });
     }
 
     public void showJenisKarya() {
@@ -31,14 +37,5 @@ public class MainController {
 
     public void showTema() {
         // Implement logic to show tema
-    }
-
-    private List<Work> getMockSearchResults(String query) {
-        // Mock implementation to return some dummy search results
-        List<Work> mockResults = new ArrayList<>();
-        mockResults.add(new Work("Title 1", "Content 1", "Tag 1, Tag 2"));
-        mockResults.add(new Work("Title 2", "Content 2", "Tag 2, Tag 3"));
-        // Add more mock results as needed
-        return mockResults;
     }
 }

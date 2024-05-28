@@ -1,8 +1,7 @@
 package narasi.models;
 
-import java.util.List;
-
 public abstract class User {
+    protected int id; // added field id
     protected String username;
     protected String password;
     protected String fullName;
@@ -20,6 +19,14 @@ public abstract class User {
     public abstract void publishWork(Work work);
 
     public abstract void manageWork(Work work);
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
 
     public String getUsername() {
         return username;
@@ -60,6 +67,4 @@ public abstract class User {
     public void setAnonymousId(String anonymousId) {
         this.anonymousId = anonymousId;
     }
-
-    
 }
