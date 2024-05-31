@@ -6,9 +6,6 @@ import javafx.scene.control.ListView;
 import narasi.models.Work;
 import narasi.models.DBManager;
 
-
-
-
 public class MainController {
 
     private final TextField searchField;

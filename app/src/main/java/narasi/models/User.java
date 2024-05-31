@@ -1,19 +1,17 @@
 package narasi.models;
 
 public abstract class User {
-    protected int id; // added field id
+    protected int id; 
     protected String username;
     protected String password;
     protected String fullName;
     protected String email;
-    protected String anonymousId; 
 
-    public User(String username, String password, String fullName, String email, String anonymousId) {
+    public User(String username, String password, String fullName, String email) {
         this.username = username;
         this.password = password;
         this.fullName = fullName;
         this.email = email;
-        this.anonymousId = anonymousId; 
     }
 
     public abstract void publishWork(Work work);
@@ -60,11 +58,4 @@ public abstract class User {
         this.email = email;
     }
 
-    public String getAnonymousId() {
-        return anonymousId;
-    }
-
-    public void setAnonymousId(String anonymousId) {
-        this.anonymousId = anonymousId;
-    }
 }

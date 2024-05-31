@@ -16,30 +16,45 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import narasi.controllers.MainController;
 import narasi.models.DBManager;
+import narasi.models.RegisteredUser;
+import narasi.models.User;
 import narasi.models.Work;
-
 
 public class MainView extends Application {
 
     private ListView<Work> workListView;
+    private boolean isLoggedIn = false;
+    private Button loginButton;
+    private User loggedInUser;
+    private Button accountButton;
+    private HBox topBar;
+    private User currentUser;
 
-
-    
     @Override
     public void start(Stage primaryStage) {
         primaryStage.setTitle("Narasi - Platform Karya Tulis Mahasiswa");
 
         BorderPane root = new BorderPane();
 
-        HBox topBar = new HBox();
+        topBar = new HBox();
         topBar.setPadding(new Insets(20));
         topBar.setSpacing(15);
         topBar.setAlignment(Pos.TOP_RIGHT);
 
-        Button loginButton = new Button("Login");
+        loginButton = new Button("Login");
         loginButton.setOnAction(event -> {
-            LoginView loginView = new LoginView(new Stage());
+            LoginView loginView = new LoginView(new Stage(), this);
             loginView.showLogin();
+        });
+
+        accountButton = new Button("Account");
+        accountButton.setOnAction(event -> {
+            if (isLoggedIn) {
+                AccountManage accountManage = new AccountManage(new Stage(), loggedInUser);
+                accountManage.showManage();
+            } else {
+                System.out.println("Please log in to access your account.");
+            }
         });
 
         TextField searchField = new TextField();
@@ -135,64 +150,9 @@ public class MainView extends Application {
             }
         });
 
-        Button temaButton = new Button("Tema");
-        temaButton.setMinWidth(120);
-        VBox temaSubButtons = new VBox();
-        temaSubButtons.setPadding(new Insets(5));
-        temaSubButtons.setSpacing(5);
-        Button cintaButton = new Button("Cinta");
-        cintaButton.setMinWidth(120);
-        Button kehilanganButton = new Button("Kehilangan");
-        kehilanganButton.setMinWidth(120);
-        Button penemuanDiriButton = new Button("Penemuan diri");
-        penemuanDiriButton.setMinWidth(120);
-        Button keadilanSosialButton = new Button("Keadilan sosial");
-        keadilanSosialButton.setMinWidth(120);
-        Button sejarahButton = new Button("Sejarah");
-        sejarahButton.setMinWidth(120);
-        Button budayaButton = new Button("Budaya");
-        budayaButton.setMinWidth(120);
 
-        cintaButton.setOnAction(event -> {
-            List<Work> searchResults = DBManager.searchWorksByTag("Cinta");
-            workListView.getItems().setAll(searchResults);
-        });
-
-        kehilanganButton.setOnAction(event -> {
-            List<Work> searchResults = DBManager.searchWorksByTag("Kehilangan");
-            workListView.getItems().setAll(searchResults);
-        });
-
-        penemuanDiriButton.setOnAction(event -> {
-            List<Work> searchResults = DBManager.searchWorksByTag("Penemuan diri");
-            workListView.getItems().setAll(searchResults);
-        });
-
-        keadilanSosialButton.setOnAction(event -> {
-            List<Work> searchResults = DBManager.searchWorksByTag("Keadilan sosial");
-            workListView.getItems().setAll(searchResults);
-        });
-
-        sejarahButton.setOnAction(event -> {
-            List<Work> searchResults = DBManager.searchWorksByTag("Sejarah");
-            workListView.getItems().setAll(searchResults);
-        });
-
-        budayaButton.setOnAction(event -> {
-            List<Work> searchResults = DBManager.searchWorksByTag("Budaya");
-            workListView.getItems().setAll(searchResults);
-        });
-
-        temaButton.setOnAction(event -> {
-            if (temaSubButtons.getChildren().isEmpty()) {
-                temaSubButtons.getChildren().addAll(cintaButton, kehilanganButton, penemuanDiriButton, keadilanSosialButton, sejarahButton, budayaButton);
-            } else {
-            temaSubButtons.getChildren().clear();
-            }
-            });
-            sidebar.getChildren().addAll(jenisKaryaButton, createScrollPane(jenisKaryaSubButtons),
-                                  genreButton, createScrollPane(genreSubButtons),
-                                  temaButton, createScrollPane(temaSubButtons));
+        sidebar.getChildren().addAll(jenisKaryaButton, createScrollPane(jenisKaryaSubButtons),
+                                  genreButton, createScrollPane(genreSubButtons));
 
         ScrollPane contentScrollPane = new ScrollPane();
         contentScrollPane.setFitToWidth(true);
@@ -222,13 +182,27 @@ public class MainView extends Application {
         return scrollPane;
     }
 
-    
+    public void setCurrentUser(User user) {
+        this.currentUser = user;
+    }
 
-    
-
-    public static void main(String[] args) {
-        launch(args);
-        
+    public void setLoggedIn(boolean isLoggedIn, User user) {
+    this.isLoggedIn = isLoggedIn;
+    if (isLoggedIn) {
+        topBar.getChildren().remove(loginButton);
+        accountButton = new Button("Account");
+        accountButton.setOnAction(event -> {
+            AccountManage accountManage = new AccountManage(new Stage(), (RegisteredUser) user);
+            accountManage.showManage();
+        });
+        topBar.getChildren().add(accountButton);
+    } else {
+        topBar.getChildren().remove(accountButton);
+        topBar.getChildren().add(loginButton);
     }
 }
 
+    public static void main(String[] args) {
+        launch(args);
+    }
+}

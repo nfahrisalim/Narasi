@@ -6,18 +6,41 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.sql.Statement;
+import javafx.util.Callback;
+
+
 
 public class DBManager {
 
+    private static String currentLoggedInUsername;
+    private static User currentUser;
+
+    public static String getCurrentLoggedInUsername() {
+        return currentLoggedInUsername;
+    }
+
+    public static void setCurrentLoggedInUsername(String username) {
+        currentLoggedInUsername = username;
+    }
+
+    public static User getCurrentUser() {
+        return currentUser;
+    }
+
+    public static void setCurrentUser(User user) {
+        currentUser = user;
+    }
+
+
     public static boolean addUser(RegisteredUser user) {
-        String query = "INSERT INTO users (username, password, fullName, email, anonymousId) VALUES (?, ?, ?, ?, ?)";
+        String query = "INSERT INTO users (username, password, fullName, email) VALUES (?, ?, ?, ?)";
         try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setString(1, user.getUsername());
             statement.setString(2, user.getPassword());
             statement.setString(3, user.getFullName());
             statement.setString(4, user.getEmail());
-            statement.setString(5, user.getAnonymousId());
             int rowsAffected = statement.executeUpdate();
             return rowsAffected > 0;
         } catch (SQLException e) {
@@ -26,16 +49,83 @@ public class DBManager {
         }
     }
 
+    public static int getNextChapterNumber(int workId) {
+        String query = "SELECT MAX(chapter_number) FROM chapters WHERE work_id = ?";
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, workId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    int maxChapterNumber = resultSet.getInt(1);
+                    return maxChapterNumber + 1;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        // Jika tidak ada bab sebelumnya, kembalikan 1
+        return 1;
+    }
+
+    public static boolean addWork(Work work) {
+        String sql = "INSERT INTO works (title, content, tags, isDraft, user_id) VALUES (?, ?, ?, ?, ?)";
+
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            statement.setString(1, work.getTitle());
+            statement.setString(2, work.getContent());
+            statement.setString(3, work.getTags());
+            statement.setBoolean(4, work.isDraft());
+
+            if (work.getUserId() == 0) {
+                System.out.println("User ID in Work object is 0. Retrieving userID from database...");
+                RegisteredUser currentUser = (RegisteredUser) getCurrentUser();
+                if (currentUser != null) {
+                    work.setUserId(currentUser.getId());
+                    System.out.println("User ID set to: " + currentUser.getId());
+                } else {
+                    System.out.println("Failed to retrieve current user ID from database.");
+                    return false;
+                }
+            }
+        
+        
+        statement.setInt(5, work.getUserId());
+        statement.executeUpdate();
+        
+        // Mendapatkan kunci yang dihasilkan dari operasi INSERT
+        try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
+            if (generatedKeys.next()) {
+                work.setId(generatedKeys.getInt(1));
+            } else {
+                System.out.println("Failed to retrieve generated key for new work.");
+                return false;
+            }
+        }
+        return true;
+    } catch (SQLException e) {
+        e.printStackTrace();
+        return false;
+    }
+}
+
+    public static RegisteredUser getCurrentRegisteredUser() {
+        User user = getCurrentUser();
+        if (user instanceof RegisteredUser) {
+            return (RegisteredUser) user;
+        } else {
+            return null; 
+        }
+    }
     public static boolean updateUser(RegisteredUser user) {
-        String query = "UPDATE users SET username = ?, password = ?, fullName = ?, email = ?, anonymousId = ? WHERE id = ?";
+        String query = "UPDATE users SET username = ?, password = ?, fullName = ?, email = ? WHERE id = ?";
         try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setString(1, user.getUsername());
             statement.setString(2, user.getPassword());
             statement.setString(3, user.getFullName());
             statement.setString(4, user.getEmail());
-            statement.setString(5, user.getAnonymousId());
-            statement.setInt(6, user.getId());
+            statement.setInt(5, user.getId());
             int rowsAffected = statement.executeUpdate();
             return rowsAffected > 0;
         } catch (SQLException e) {
@@ -52,14 +142,12 @@ public class DBManager {
              PreparedStatement statement = connection.prepareStatement(query);
              ResultSet resultSet = statement.executeQuery()) {
             while (resultSet.next()) {
-                RegisteredUser user = new RegisteredUser(
-                    resultSet.getString("username"),
-                    resultSet.getString("password"),
-                    resultSet.getString("fullName"),
-                    resultSet.getString("email"),
-                    resultSet.getString("anonymousId")
-                );
-                user.setId(resultSet.getInt("id"));
+                RegisteredUser user = new RegisteredUser(); // Gunakan konstruktor tambahan
+                user.setUsername(resultSet.getString("username"));
+                user.setPassword(resultSet.getString("password"));
+                user.setFullName(resultSet.getString("fullName"));
+                user.setEmail(resultSet.getString("email"));
+                user.setUserId(resultSet.getInt("id")); // Setel ID secara terpisah
                 users.add(user);
             }
         } catch (SQLException e) {
@@ -67,8 +155,9 @@ public class DBManager {
         }
         return users;
     }
+    
 
-   public static List<Work> searchWorksByTitle(String title) {
+    public static List<Work> searchWorksByTitle(String title) {
         List<Work> works = new ArrayList<>();
         String query = "SELECT * FROM works WHERE title LIKE ?";
         try (Connection connection = DatabaseConnection.getConnection();
@@ -77,12 +166,15 @@ public class DBManager {
             try (ResultSet resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
                     Work work = new Work(
+                        resultSet.getInt("id"),
                         resultSet.getString("title"),
                         resultSet.getString("content"),
-                        resultSet.getString("tags")
+                        resultSet.getString("tags"),
+                        resultSet.getInt("kudosCount"),
+                        resultSet.getInt("user_id"),
+                        resultSet.getBoolean("isDraft"),
+                        resultSet.getTimestamp("timestamp")
                     );
-                    work.setKudosCount(resultSet.getInt("kudosCount"));
-                    // Populate comments if necessary
                     works.add(work);
                 }
             }
@@ -91,6 +183,7 @@ public class DBManager {
         }
         return works;
     }
+    
 
     public static boolean updateUser(User user) {
         String query = "UPDATE users SET username = ?, email = ?, fullname = ? WHERE id = ?";
@@ -108,32 +201,52 @@ public class DBManager {
         }
     }
 
-    public static boolean insertWork(Work work) {
-        String query = "INSERT INTO works (title, content, tags, kudosCount) VALUES (?, ?, ?, ?)";
-        try (Connection connection = DatabaseConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
-            statement.setString(1, work.getTitle());
-            statement.setString(2, work.getContent());
-            statement.setString(3, work.getTags());
-            statement.setInt(4, work.getKudosCount());
-            int rowsInserted = statement.executeUpdate();
-            return rowsInserted > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
+   public static boolean publishWork(Work work) {
+    String query = "INSERT INTO works (title, content, tags, isDraft, user_id) VALUES (?, ?, ?, ?, ?)";
+    try (Connection connection = DatabaseConnection.getConnection();
+         PreparedStatement statement = connection.prepareStatement(query)) {
+        statement.setString(1, work.getTitle());
+        statement.setString(2, work.getContent());
+        statement.setString(3, work.getTags());
+        statement.setBoolean(4, false); // Set isDraft ke false saat dipublikasikan
+        statement.setInt(5, work.getUserId());
+        int rowsInserted = statement.executeUpdate();
+        return rowsInserted > 0;
+    } catch (SQLException e) {
+        e.printStackTrace();
+        return false;
     }
+}
 
-    public static boolean updateWork(Work work) {
-        String query = "UPDATE works SET content = ?, tags = ?, kudosCount = ? WHERE title = ?";
+    
+
+public static boolean updateWork(Work work) {
+    String query = "UPDATE works SET title = ?, content = ?, tags = ?, isDraft = ? WHERE id = ?";
+    try (Connection connection = DatabaseConnection.getConnection();
+         PreparedStatement statement = connection.prepareStatement(query)) {
+        statement.setString(1, work.getTitle());
+        statement.setString(2, work.getContent());
+        statement.setString(3, work.getTags());
+        statement.setBoolean(4, work.isDraft());
+        statement.setInt(5, work.getId());
+        int rowsUpdated = statement.executeUpdate();
+        return rowsUpdated > 0;
+    } catch (SQLException e) {
+        e.printStackTrace();
+        return false;
+    }
+}
+
+    public static boolean saveChapterToDatabase(int workId, String chapterTitle, int chapterNumber) {
+        String sql = "INSERT INTO chapters (work_id, chapter_number, title) VALUES (?, ?, ?)";
+
         try (Connection connection = DatabaseConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
-            statement.setString(1, work.getContent());
-            statement.setString(2, work.getTags());
-            statement.setInt(3, work.getKudosCount());
-            statement.setString(4, work.getTitle());
-            int rowsUpdated = statement.executeUpdate();
-            return rowsUpdated > 0;
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, workId);
+            statement.setInt(2, chapterNumber);
+            statement.setString(3, chapterTitle);
+            statement.executeUpdate();
+            return true;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
@@ -161,11 +274,10 @@ public class DBManager {
             try (ResultSet resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
                     Work work = new Work();
-                    // Populate Work object with data from resultSet
                     work.setTitle(resultSet.getString("title"));
                     work.setContent(resultSet.getString("content"));
                     work.setTags(resultSet.getString("tags"));
-                    // Add Work object to the list
+                
                     works.add(work);
                 }
             }
@@ -175,15 +287,30 @@ public class DBManager {
         return works;
     }
 
-    public static boolean registerUser(String username, String password, String fullName, String email, String anonymousId) {
-        String query = "INSERT INTO users (username, password, fullName, email, anonymousId) VALUES (?, ?, ?, ?, ?)";
+    public static boolean addChapter(int workId, int chapterNumber, String title) {
+        String query = "INSERT INTO chapters (work_id, chapter_number, title) VALUES (?, ?, ?)";
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, workId);
+            statement.setInt(2, chapterNumber);
+            statement.setString(3, title);
+            int rowsInserted = statement.executeUpdate();
+            return rowsInserted > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+    
+
+    public static boolean registerUser(String username, String password, String fullName, String email) {
+        String query = "INSERT INTO users (username, password, fullName, email) VALUES (?, ?, ?, ?)";
         try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setString(1, username);
             statement.setString(2, password);
             statement.setString(3, fullName);
             statement.setString(4, email);
-            statement.setString(5, anonymousId);
             int rowsAffected = statement.executeUpdate();
             return rowsAffected > 0;
         } catch (SQLException e) {
@@ -192,21 +319,112 @@ public class DBManager {
         }
     }
 
-    public static boolean loginUser(String username, String password) {
+
+    public static List<Work> getWorksByCurrentUser(int userId) {
+        List<Work> works = new ArrayList<>();
+        String query = "SELECT * FROM works WHERE user_id = ?";
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, userId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    Work work = new Work(
+                        resultSet.getInt("id"),
+                        resultSet.getString("title"),
+                        resultSet.getString("content"),
+                        resultSet.getString("tags"),
+                        resultSet.getInt("kudosCount"),
+                        resultSet.getInt("user_id"),
+                        resultSet.getBoolean("isDraft"),
+                        resultSet.getTimestamp("timestamp")
+                    );
+                    works.add(work);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return works;
+    }
+
+    public static List<String> getWorkTitlesByCurrentUser(int userId) {
+        List<String> workTitles = new ArrayList<>();
+        String query = "SELECT title, isDraft FROM works WHERE user_id = ?";
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, userId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    String title = resultSet.getString("title");
+                    boolean isDraft = resultSet.getBoolean("isDraft");
+                    if (isDraft) {
+                        title += " (Draft)";
+                    }
+                    workTitles.add(title);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return workTitles;
+    }
+    
+    
+    public static List<Work> getDraftWorksByCurrentUser(int userId) {
+        List<Work> works = new ArrayList<>();
+        String query = "SELECT * FROM works WHERE user_id = ? AND is_draft = 1";
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, userId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    Work work = new Work();
+                    work.setId(resultSet.getInt("id"));
+                    work.setTitle(resultSet.getString("title"));
+                    work.setContent(resultSet.getString("content"));
+                    work.setTags(resultSet.getString("tags"));
+                    work.setKudosCount(resultSet.getInt("kudosCount"));
+                    work.setUserId(resultSet.getInt("user_id"));
+                    work.setDraft(resultSet.getBoolean("is_draft"));
+                    works.add(work);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return works;
+    }
+    
+    
+    public static RegisteredUser loginUser(String username, String password) {
         String query = "SELECT * FROM users WHERE username = ? AND password = ?";
         try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setString(1, username);
             statement.setString(2, password);
             try (ResultSet resultSet = statement.executeQuery()) {
-                return resultSet.next(); // Mengembalikan true jika pengguna ditemukan
+                if (resultSet.next()) {
+                    int id = resultSet.getInt("id");
+                    String fullName = resultSet.getString("fullName");
+                    String email = resultSet.getString("email");
+                    return new RegisteredUser(username, password, fullName, email, id); // Gunakan konstruktor tambahan
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            return false;
         }
+        return null;
     }
-
+    
+    public class LoginController {
+    public User login(String username, String password) {
+        User loggedInUser = DBManager.loginUser(username, password);
+        if (loggedInUser != null) {
+            DBManager.setCurrentLoggedInUsername(username);
+        }
+        return loggedInUser;
+    }
+}
 
     public static RegisteredUser getUserByUsername(String username) {
         String query = "SELECT * FROM users WHERE username = ?";
@@ -219,8 +437,7 @@ public class DBManager {
                         resultSet.getString("username"),
                         resultSet.getString("password"),
                         resultSet.getString("fullName"),
-                        resultSet.getString("email"),
-                        resultSet.getString("anonymousId")
+                        resultSet.getString("email")
                     );
                     user.setId(resultSet.getInt("id"));
                     return user;
