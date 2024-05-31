@@ -79,19 +79,18 @@ public class MainView extends Application {
         Button puisiButton = new Button("Puisi");
         puisiButton.setMinWidth(120);
 
-        novelButton.setOnAction(event-> {
+        novelButton.setOnAction(event -> {
             List<Work> searchResults = DBManager.searchWorksByTag("Novel");
             workListView.getItems().setAll(searchResults);
         });
-        cerpenButton.setOnAction(event-> {
+        cerpenButton.setOnAction(event -> {
             List<Work> searchResults = DBManager.searchWorksByTag("Cerpen");
             workListView.getItems().setAll(searchResults);
         });
-        puisiButton.setOnAction(event-> {
-            List<Work> searchResults = DBManager.searchWorksByTag("Cerpen");
+        puisiButton.setOnAction(event -> {
+            List<Work> searchResults = DBManager.searchWorksByTag("Puisi");
             workListView.getItems().setAll(searchResults);
         });
-
 
         jenisKaryaButton.setOnAction(event -> {
             if (jenisKaryaSubButtons.getChildren().isEmpty()) {
@@ -167,6 +166,15 @@ public class MainView extends Application {
 
         workListView = new ListView<>();
         workListView.setCellFactory(param -> new CustomListCell());
+
+        // Event handler untuk membuka ReadingView ketika item di klik dua kali
+        workListView.setOnMouseClicked(event -> {
+            if (event.getClickCount() == 2 && workListView.getSelectionModel().getSelectedItem() != null) {
+                Work selectedWork = workListView.getSelectionModel().getSelectedItem();
+                new ReadingView(new Stage(), selectedWork);
+            }
+        });
+
         contentScrollPane.setContent(workListView);
 
         root.setTop(topBar);
@@ -252,9 +260,7 @@ public class MainView extends Application {
                 setGraphic(null);
             }
         }
-        
-        
-        
+
         private String getPreviewContent(String content) {
             String[] words = content.split("\\s+");
             if (words.length > 50) {

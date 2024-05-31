@@ -20,7 +20,7 @@ public class ReadingView {
 
     private BorderPane root;
     private int currentPage = 0;
-    private final int totalPages = 5; // Example total number of pages
+    private final int totalPages = 5; 
     private int kudosCount = 0;
     private Label kudosLabel;
     private TextArea readingArea;
