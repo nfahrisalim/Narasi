@@ -64,6 +64,7 @@ public class RegisterView {
         });
 
         Scene scene = new Scene(grid, 300, 250);
+        scene.getStylesheets().add(getClass().getResource("/RegisterStyle.css").toExternalForm());
         stage.setScene(scene);
         stage.show();
     }

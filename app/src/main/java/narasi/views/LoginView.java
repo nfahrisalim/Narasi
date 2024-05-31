@@ -50,7 +50,6 @@ public class LoginView {
                 System.out.println("Login berhasil!");
                 mainView.setLoggedIn(true, user);
                 stage.close();
-                // Setel pengguna saat ini di DBManager
                 DBManager.setCurrentUser(user);
             } else {
                 System.out.println("Login gagal. Silakan coba lagi.");
@@ -62,6 +61,7 @@ public class LoginView {
         });
 
         Scene scene = new Scene(grid, 300, 200);
+        scene.getStylesheets().add(getClass().getResource("/LoginStyle.css").toExternalForm());
         stage.setScene(scene);
         stage.show();
     }

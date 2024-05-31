@@ -167,6 +167,7 @@ public class AccountManage {
         root.setCenter(rightPane);
 
         Scene scene = new Scene(root, 800, 600);
+        scene.getStylesheets().add(getClass().getResource("/AccountStyle.css").toExternalForm());
         stage.setScene(scene);
         stage.show();
     }

@@ -1,0 +1,31 @@
+.root {
+    -fx-base: #8576FF;
+}
+
+.button {
+    -fx-background-color: #6FDCE3;
+    -fx-text-fill: white;
+    -fx-font-family: "Helvetica";
+}
+
+.list-cell {
+    -fx-background-color: #F0F0F0;
+    -fx-padding: 10;
+    -fx-spacing: 5;
+    -fx-border-color: #CCCCCC;
+    -fx-border-width: 0 0 1 0; /* Tambahkan border hanya pada bottom */
+    -fx-border-style: solid;
+}
+
+.list-cell:hover {
+    -fx-background-color: #E0E0E0; /* Warna latar saat list dihover */
+}
+
+#topBar, .sidebar {
+    -fx-background-color: #F0F0F0;
+}
+
+.text {
+    -fx-font-family: "Helvetica";
+    -fx-fill: #333333; /* Warna teks */
+}

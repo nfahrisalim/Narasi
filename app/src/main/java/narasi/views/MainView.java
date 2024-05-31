@@ -23,6 +23,8 @@ public class MainView extends Application {
     private HBox topBar;
     private User currentUser;
 
+    
+
     @Override
     public void start(Stage primaryStage) {
         primaryStage.setTitle("Narasi - Platform Karya Tulis Mahasiswa");
@@ -167,7 +169,6 @@ public class MainView extends Application {
         workListView = new ListView<>();
         workListView.setCellFactory(param -> new CustomListCell());
 
-        // Event handler untuk membuka ReadingView ketika item di klik dua kali
         workListView.setOnMouseClicked(event -> {
             if (event.getClickCount() == 2 && workListView.getSelectionModel().getSelectedItem() != null) {
                 Work selectedWork = workListView.getSelectionModel().getSelectedItem();
@@ -187,7 +188,9 @@ public class MainView extends Application {
         List<Work> allWorks = DBManager.getAllPublishedWorks();
         workListView.getItems().setAll(allWorks);
 
-        Scene scene = new Scene(root, 1000, 600);
+        Scene scene = new Scene(root, 1000, 1000);
+        scene.getStylesheets().add(getClass().getResource("/MainStyle.css").toExternalForm());
+
         primaryStage.setScene(scene);
         primaryStage.show();
     }
@@ -249,8 +252,7 @@ public class MainView extends Application {
         protected void updateItem(Work item, boolean empty) {
             super.updateItem(item, empty);
             if (item != null && !empty) {
-                title.setText("Judul: " + item.getTitle());
-                author.setText("Oleh: " + item.getAuthorFullName());
+                title.setText("Judul: " + item.getTitle()); 
                 tags.setText("Tags: " + item.getTags());
                 preview.setText(getPreviewContent(item.getContent()));
                 timestamp.setText("Tanggal Rilis: " + item.getTimestamp().toLocalDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));

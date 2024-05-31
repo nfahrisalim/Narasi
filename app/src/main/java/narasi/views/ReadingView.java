@@ -98,17 +98,16 @@ public class ReadingView {
         Button previousButton = new Button("Previous");
         Button nextButton = new Button("Next");
 
-        // Left-aligned box for the comment button
         HBox leftBox = new HBox(10);
         leftBox.setAlignment(Pos.CENTER_LEFT);
         leftBox.getChildren().add(commentButton);
 
-        // Right-aligned box for the kudos, previous, and next buttons
+        
         HBox rightBox = new HBox(10);
         rightBox.setAlignment(Pos.CENTER_RIGHT);
         rightBox.getChildren().addAll(kudosButton, previousButton, nextButton);
 
-        // Container for both left and right boxes
+        
         HBox bottomBox = new HBox(10);
         bottomBox.setPadding(new Insets(10));
         bottomBox.setAlignment(Pos.CENTER);
@@ -123,6 +122,7 @@ public class ReadingView {
 
         // Display the window
         primaryStage.setTitle("N A R A S I - Platform Karya Tulis Mahasiswa");
+        scene.getStylesheets().add(getClass().getResource("/ReadingStyle.css").toExternalForm());
         primaryStage.setScene(scene);
         primaryStage.show();
     }
