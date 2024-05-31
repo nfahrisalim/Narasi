@@ -1,24 +1,17 @@
 package narasi.views;
 
 import java.util.List;
-
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.ListView;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TextField;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import narasi.controllers.MainController;
-import narasi.models.DBManager;
-import narasi.models.RegisteredUser;
-import narasi.models.User;
-import narasi.models.Work;
+import narasi.models.*;
+import java.time.format.DateTimeFormatter;
 
 public class MainView extends Application {
 
@@ -150,9 +143,8 @@ public class MainView extends Application {
             }
         });
 
-
         sidebar.getChildren().addAll(jenisKaryaButton, createScrollPane(jenisKaryaSubButtons),
-                                  genreButton, createScrollPane(genreSubButtons));
+                genreButton, createScrollPane(genreSubButtons));
 
         ScrollPane contentScrollPane = new ScrollPane();
         contentScrollPane.setFitToWidth(true);
@@ -160,6 +152,7 @@ public class MainView extends Application {
         contentScrollPane.setPadding(new Insets(10, 10, 10, 15));
 
         workListView = new ListView<>();
+        workListView.setCellFactory(param -> new CustomListCell());
         contentScrollPane.setContent(workListView);
 
         root.setTop(topBar);
@@ -168,6 +161,9 @@ public class MainView extends Application {
 
         MainController controller = new MainController(searchField, workListView);
         controller.init();
+
+        List<Work> allWorks = DBManager.getAllPublishedWorks();
+        workListView.getItems().setAll(allWorks);
 
         Scene scene = new Scene(root, 1000, 600);
         primaryStage.setScene(scene);
@@ -187,22 +183,71 @@ public class MainView extends Application {
     }
 
     public void setLoggedIn(boolean isLoggedIn, User user) {
-    this.isLoggedIn = isLoggedIn;
-    if (isLoggedIn) {
-        topBar.getChildren().remove(loginButton);
-        accountButton = new Button("Account");
-        accountButton.setOnAction(event -> {
-            AccountManage accountManage = new AccountManage(new Stage(), (RegisteredUser) user);
-            accountManage.showManage();
-        });
-        topBar.getChildren().add(accountButton);
-    } else {
-        topBar.getChildren().remove(accountButton);
-        topBar.getChildren().add(loginButton);
+        this.isLoggedIn = isLoggedIn;
+        if (isLoggedIn) {
+            topBar.getChildren().remove(loginButton);
+            accountButton = new Button("Account");
+            accountButton.setOnAction(event -> {
+                AccountManage accountManage = new AccountManage(new Stage(), (RegisteredUser) user);
+                accountManage.showManage();
+            });
+            topBar.getChildren().add(accountButton);
+        } else {
+            topBar.getChildren().remove(accountButton);
+            topBar.getChildren().add(loginButton);
+        }
     }
-}
 
     public static void main(String[] args) {
         launch(args);
+    }
+
+    static class CustomListCell extends ListCell<Work> {
+        private VBox content;
+        private Text title;
+        private Text author;
+        private Text tags;
+        private Text preview;
+        private Text timestamp;
+
+        public CustomListCell() {
+            super();
+            title = new Text();
+            author = new Text();
+            tags = new Text();
+            preview = new Text();
+            timestamp = new Text();
+
+            content = new VBox(title, author, tags, preview, timestamp);
+            content.setSpacing(5);
+            content.setPadding(new Insets(10, 10, 10, 10));
+        }
+
+        @Override
+        protected void updateItem(Work item, boolean empty) {
+            super.updateItem(item, empty);
+            if (item != null && !empty) {
+                title.setText("Judul: " + item.getTitle());
+                author.setText("Oleh: " + item.getAuthorFullName());
+                tags.setText("Tags: " + item.getTags());
+                preview.setText("Content: " + getPreviewContent(item.getContent()));
+                timestamp.setText("Timestamp: " + item.getTimestamp().toLocalDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        
+                setGraphic(content);
+            } else {
+                setGraphic(null);
+            }
+        }
+        
+        
+        
+        private String getPreviewContent(String content) {
+            String[] words = content.split("\\s+");
+            if (words.length > 50) {
+                return String.join(" ", java.util.Arrays.copyOfRange(words, 0, 50)) + "...";
+            } else {
+                return content;
+            }
+        }
     }
 }

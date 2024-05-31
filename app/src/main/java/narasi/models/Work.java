@@ -12,9 +12,10 @@ public class Work {
     private List<Comment> comments;
     private int kudosCount;
     private int userId;
+    private String authorFullName; // New field for the author's full name
     private boolean isDraft;
     private List<Chapter> chapters;
-    private Timestamp timestamp; // Menambahkan field timestamp
+    private Timestamp timestamp; 
 
     public Work() {
         this.id = 0;
@@ -24,12 +25,13 @@ public class Work {
         this.comments = new ArrayList<>();
         this.kudosCount = 0;
         this.userId = 0;
+        this.authorFullName = ""; // Initialize the new field
         this.isDraft = true;
         this.chapters = new ArrayList<>();
-        this.timestamp = new Timestamp(System.currentTimeMillis()); // Inisialisasi timestamp
+        this.timestamp = new Timestamp(System.currentTimeMillis());
     }
 
-    public Work(int id, String title, String content, String tags, int kudosCount, int userId, boolean isDraft, Timestamp timestamp) {
+    public Work(int id, String title, String content, String tags, int kudosCount, int userId, String authorFullName, boolean isDraft, Timestamp timestamp) {
         this.id = id;
         this.title = title;
         this.content = content;
@@ -37,9 +39,10 @@ public class Work {
         this.comments = new ArrayList<>();
         this.kudosCount = kudosCount;
         this.userId = userId;
+        this.authorFullName = authorFullName; // Initialize the new field
         this.isDraft = isDraft;
         this.chapters = new ArrayList<>();
-        this.timestamp = timestamp; // Inisialisasi timestamp
+        this.timestamp = timestamp;
     }
 
     // Getters and setters...
@@ -98,6 +101,14 @@ public class Work {
 
     public void setUserId(int userId) {
         this.userId = userId;
+    }
+
+    public String getAuthorFullName() { // New getter
+        return authorFullName;
+    }
+
+    public void setAuthorFullName(String authorFullName) { // New setter
+        this.authorFullName = authorFullName;
     }
 
     public boolean isDraft() {

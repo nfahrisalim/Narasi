@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.sql.Statement;
 import javafx.util.Callback;
+import java.sql.Timestamp;
 
 
 
@@ -31,6 +32,7 @@ public class DBManager {
     public static void setCurrentUser(User user) {
         currentUser = user;
     }
+    
 
 
     public static boolean addUser(RegisteredUser user) {
@@ -155,7 +157,51 @@ public class DBManager {
         }
         return users;
     }
-    
+    public static List<Work> getAllPublishedWorks() {
+        List<Work> works = new ArrayList<>();
+        Connection connection = null;
+        PreparedStatement statement = null;
+        ResultSet resultSet = null;
+
+        try {
+            connection = DatabaseConnection.getConnection();
+            String sql = "SELECT works.id, works.title, works.content, works.tags, works.kudosCount, works.userId, users.fullName, works.isDraft, works.timestamp " +
+                         "FROM works " +
+                         "INNER JOIN users ON works.userId = users.id " +
+                         "WHERE works.isDraft = 0 " +
+                         "ORDER BY works.timestamp DESC";
+            statement = connection.prepareStatement(sql);
+            resultSet = statement.executeQuery();
+
+            while (resultSet.next()) {
+                int id = resultSet.getInt("id");
+                String title = resultSet.getString("title");
+                String content = resultSet.getString("content");
+                String tags = resultSet.getString("tags");
+                int kudosCount = resultSet.getInt("kudosCount");
+                int userId = resultSet.getInt("userId");
+                String authorFullName = resultSet.getString("fullName");
+                boolean isDraft = resultSet.getBoolean("isDraft");
+                Timestamp timestamp = resultSet.getTimestamp("timestamp");
+
+                Work work = new Work(id, title, content, tags, kudosCount, userId, authorFullName, isDraft, timestamp);
+                works.add(work);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (resultSet != null) resultSet.close();
+                if (statement != null) statement.close();
+                if (connection != null) connection.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return works;
+    }
+
 
     public static List<Work> searchWorksByTitle(String title) {
         List<Work> works = new ArrayList<>();
@@ -165,16 +211,15 @@ public class DBManager {
             statement.setString(1, "%" + title + "%");
             try (ResultSet resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
-                    Work work = new Work(
-                        resultSet.getInt("id"),
-                        resultSet.getString("title"),
-                        resultSet.getString("content"),
-                        resultSet.getString("tags"),
-                        resultSet.getInt("kudosCount"),
-                        resultSet.getInt("user_id"),
-                        resultSet.getBoolean("isDraft"),
-                        resultSet.getTimestamp("timestamp")
-                    );
+                    Work work = new Work();
+                    work.setId(resultSet.getInt("id"));
+                    work.setTitle(resultSet.getString("title"));
+                    work.setContent(resultSet.getString("content"));
+                    work.setTags(resultSet.getString("tags"));
+                    work.setKudosCount(resultSet.getInt("kudosCount"));
+                    work.setUserId(resultSet.getInt("user_id"));
+                    work.setDraft(resultSet.getBoolean("isDraft"));
+                    work.setTimestamp(resultSet.getTimestamp("timestamp"));
                     works.add(work);
                 }
             }
@@ -183,6 +228,7 @@ public class DBManager {
         }
         return works;
     }
+    
     
 
     public static boolean updateUser(User user) {
@@ -319,25 +365,28 @@ public static boolean updateWork(Work work) {
         }
     }
 
-
     public static List<Work> getWorksByCurrentUser(int userId) {
         List<Work> works = new ArrayList<>();
-        String query = "SELECT * FROM works WHERE user_id = ?";
+        String query = "SELECT works.*, users.fullName " +
+                       "FROM works " +
+                       "INNER JOIN users ON works.user_id = users.id " +
+                       "WHERE works.user_id = ?";
         try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setInt(1, userId);
             try (ResultSet resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
-                    Work work = new Work(
-                        resultSet.getInt("id"),
-                        resultSet.getString("title"),
-                        resultSet.getString("content"),
-                        resultSet.getString("tags"),
-                        resultSet.getInt("kudosCount"),
-                        resultSet.getInt("user_id"),
-                        resultSet.getBoolean("isDraft"),
-                        resultSet.getTimestamp("timestamp")
-                    );
+                    Work work = new Work();
+                    work.setId(resultSet.getInt("id"));
+                    work.setTitle(resultSet.getString("title"));
+                    work.setContent(resultSet.getString("content"));
+                    work.setTags(resultSet.getString("tags"));
+                    work.setKudosCount(resultSet.getInt("kudosCount"));
+                    work.setUserId(resultSet.getInt("user_id"));
+                    work.setDraft(resultSet.getBoolean("isDraft"));
+                    work.setTimestamp(resultSet.getTimestamp("timestamp"));
+                    // Set fullname from users table
+                    work.setAuthorFullName(resultSet.getString("fullName")); // Use setAuthorFullName
                     works.add(work);
                 }
             }
@@ -346,6 +395,7 @@ public static boolean updateWork(Work work) {
         }
         return works;
     }
+    
 
     public static List<String> getWorkTitlesByCurrentUser(int userId) {
         List<String> workTitles = new ArrayList<>();

@@ -153,30 +153,13 @@ public class AccountManage {
             }
         });
 
-        Button addChapterButton = new Button("Add Chapter");
-        addChapterButton.setOnAction(event -> {
-            if (selectedWork != null) {
-                TextInputDialog dialog = new TextInputDialog();
-                dialog.setTitle("Add Chapter");
-                dialog.setHeaderText(null);
-                dialog.setContentText("Chapter title:");
-
-                Optional<String> result = dialog.showAndWait();
-                result.ifPresent(chapterTitle -> {
-                    int chapterNumber = DBManager.getNextChapterNumber(selectedWork.getId());
-                    DBManager.addChapter(selectedWork.getId(), chapterNumber, chapterTitle);
-                });
-            }
-        });
-
         rightPane.add(new Label("Title:"), 0, 0);
         rightPane.add(titleField, 1, 0);
         rightPane.add(new Label("Content:"), 0, 1);
         rightPane.add(contentArea, 1, 1);
         rightPane.add(saveDraftButton, 0, 2);
         rightPane.add(publishButton, 1, 2);
-        rightPane.add(addChapterButton, 2, 2);
-
+        
         VBox taggingBox = createTaggingButtons();
         rightPane.add(taggingBox, 3, 1);
 
