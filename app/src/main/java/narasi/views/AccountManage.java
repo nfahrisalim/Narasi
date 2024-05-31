@@ -100,7 +100,7 @@ public class AccountManage {
                         works.add(newWork);
                         workListView.getItems().add(newWork.getTitle() + " (Draft)");
                     } else {
-                        System.out.println("Failed to create new work and save draft.");
+                        System.out.println("Gagal membuat karya baru dan menyimpan draft.");
                     }
                 } else {
                     System.out.println("Title and content cannot be empty.");
@@ -119,7 +119,7 @@ public class AccountManage {
                     Alert alert = new Alert(Alert.AlertType.WARNING);
                     alert.setTitle("Publish Warning");
                     alert.setHeaderText(null);
-                    alert.setContentText("Please add at least one tag before publishing.");
+                    alert.setContentText("Tambahkan setidaknya satu tag sebelum merilis karya.");
                     alert.showAndWait();
                     return;
                 }
@@ -140,7 +140,7 @@ public class AccountManage {
                         works.add(newWork);
                         workListView.getItems().add(newWork.getTitle());
                     } else {
-                        System.out.println("Failed to create new work and publish.");
+                        System.out.println("Gagal dalam membuat karya dan melakukan perilisan.");
                     }
                 } else {
                     System.out.println("Title, content, and tags cannot be empty.");

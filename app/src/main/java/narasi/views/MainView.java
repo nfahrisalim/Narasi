@@ -79,6 +79,20 @@ public class MainView extends Application {
         Button puisiButton = new Button("Puisi");
         puisiButton.setMinWidth(120);
 
+        novelButton.setOnAction(event-> {
+            List<Work> searchResults = DBManager.searchWorksByTag("Novel");
+            workListView.getItems().setAll(searchResults);
+        });
+        cerpenButton.setOnAction(event-> {
+            List<Work> searchResults = DBManager.searchWorksByTag("Cerpen");
+            workListView.getItems().setAll(searchResults);
+        });
+        puisiButton.setOnAction(event-> {
+            List<Work> searchResults = DBManager.searchWorksByTag("Cerpen");
+            workListView.getItems().setAll(searchResults);
+        });
+
+
         jenisKaryaButton.setOnAction(event -> {
             if (jenisKaryaSubButtons.getChildren().isEmpty()) {
                 jenisKaryaSubButtons.getChildren().addAll(novelButton, cerpenButton, puisiButton);
@@ -230,8 +244,8 @@ public class MainView extends Application {
                 title.setText("Judul: " + item.getTitle());
                 author.setText("Oleh: " + item.getAuthorFullName());
                 tags.setText("Tags: " + item.getTags());
-                preview.setText("Content: " + getPreviewContent(item.getContent()));
-                timestamp.setText("Timestamp: " + item.getTimestamp().toLocalDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+                preview.setText(getPreviewContent(item.getContent()));
+                timestamp.setText("Tanggal Rilis: " + item.getTimestamp().toLocalDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
         
                 setGraphic(content);
             } else {
