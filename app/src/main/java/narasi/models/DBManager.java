@@ -9,6 +9,8 @@ import java.util.List;
 import java.sql.Statement;
 import javafx.util.Callback;
 import java.sql.Timestamp;
+import java.util.Date;
+
 
 
 
@@ -50,6 +52,115 @@ public class DBManager {
             return false;
         }
     }
+
+    public static boolean workExists(int workId) {
+        String checkSQL = "SELECT 1 FROM works WHERE id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(checkSQL)) {
+    
+            pstmt.setInt(1, workId);
+    
+            try (ResultSet rs = pstmt.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+    
+
+    public static User getUserByWorkId(int workId) {
+        String selectSQL = "SELECT users.fullName, users.email FROM users " +
+                           "INNER JOIN works ON users.id = works.user_id " +
+                           "WHERE works.id = ?";
+        User user = null;
+    
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(selectSQL)) {
+    
+            pstmt.setInt(1, workId);
+    
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    String fullName = rs.getString("fullName");
+                    String email = rs.getString("email");
+                    user = new User(null, null, fullName, email) {
+                        @Override
+                        public void publishWork(Work work) {}
+    
+                        @Override
+                        public void manageWork(Work work) {}
+                    };
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return user;
+    }
+
+    public static void addCommentToWork(int workId, Comment comment) {
+        String sql = "INSERT INTO comments(work_id, content, timestamp) VALUES(?, ?, ?)";
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setInt(1, workId);
+            pstmt.setString(2, comment.getContent());
+            pstmt.setTimestamp(3, new Timestamp(comment.getTimestamp().getTime()));
+            pstmt.executeUpdate();
+            
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    public static List<Comment> getCommentsByWorkId(int workId) {
+        String sql = "SELECT * FROM comments WHERE work_id = ?";
+        List<Comment> comments = new ArrayList<>();
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setInt(1, workId);
+            ResultSet rs = pstmt.executeQuery();
+            
+            while (rs.next()) {
+                String content = rs.getString("content");
+                Timestamp timestamp = rs.getTimestamp("timestamp");
+                Comment comment = new Comment(content, new Date(timestamp.getTime()));
+                comments.add(comment);
+            }
+            
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        
+        return comments;
+    }
+    
+    public static int getWorkIdByContent(String content) {
+        String selectSQL = "SELECT id FROM works WHERE content = ?";
+        int workId = -1;
+    
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(selectSQL)) {
+    
+            pstmt.setString(1, content);
+    
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    workId = rs.getInt("id");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    
+        return workId;
+    }
+    
 
     public static int getNextChapterNumber(int workId) {
         String query = "SELECT MAX(chapter_number) FROM chapters WHERE work_id = ?";
@@ -229,6 +340,42 @@ public class DBManager {
         return works;
     }
     
+    public static int getKudosCount(int workId) {
+        String selectSQL = "SELECT kudosCount FROM works WHERE id = ?";
+        int kudos = 0;
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(selectSQL)) {
+
+            pstmt.setInt(1, workId);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    kudos = rs.getInt("kudosCount");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return kudos;
+    }
+
+    public static void updateKudosCount(int workId, int newKudosCount) {
+        String updateSQL = "UPDATE works SET kudosCount = ? WHERE id = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(updateSQL)) {
+
+            pstmt.setInt(1, newKudosCount);
+            pstmt.setInt(2, workId);
+
+            int rowsAffected = pstmt.executeUpdate();
+            System.out.println("Rows affected: " + rowsAffected); // Debug statement
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
     
 
     public static boolean updateUser(User user) {

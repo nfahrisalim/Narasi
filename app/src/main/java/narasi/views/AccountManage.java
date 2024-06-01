@@ -19,6 +19,7 @@ public class AccountManage {
     private final User currentUser;
     private TextArea contentArea;
     private TextField titleField;
+    private Stage primaryStage;
     private final ObservableList<String> selectedTags = FXCollections.observableArrayList();
 
     public AccountManage(Stage stage, User currentUser) {
@@ -58,7 +59,7 @@ public class AccountManage {
 
             Optional<ButtonType> result = alert.showAndWait();
             if (result.isPresent() && result.get() == ButtonType.OK) {
-                // Implementasi logout
+          
                 stage.close();
                 System.out.println("User logged out.");
             }
@@ -87,7 +88,6 @@ public class AccountManage {
                 saveDraft(selectedWork);
                 updateWorkListView(workListView, workTitles);
             } else {
-                // Jika tidak ada pekerjaan yang dipilih, buat pekerjaan baru dan simpan draft
                 if (!titleField.getText().isEmpty() && !contentArea.getText().isEmpty()) {
                     Work newWork = new Work();
                     newWork.setTitle(titleField.getText());
@@ -166,7 +166,8 @@ public class AccountManage {
         root.setLeft(leftPane);
         root.setCenter(rightPane);
 
-        Scene scene = new Scene(root, 800, 600);
+        Scene scene = new Scene(root);
+        stage.setFullScreen(true);
         scene.getStylesheets().add(getClass().getResource("/AccountStyle.css").toExternalForm());
         stage.setScene(scene);
         stage.show();

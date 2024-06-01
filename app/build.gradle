@@ -23,6 +23,17 @@ application {
     mainClass = 'narasi.App'
 }
 
+mainClassName = 'narasi.App'
+jar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    manifest {
+        attributes 'Main-Class': 'narasi.Launcher'
+    }
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+
 javafx {
     version = '20'
     modules = ['javafx.controls']
