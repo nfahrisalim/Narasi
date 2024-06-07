@@ -206,7 +206,6 @@ public class DBManager {
         statement.setInt(5, work.getUserId());
         statement.executeUpdate();
         
-        // Mendapatkan kunci yang dihasilkan dari operasi INSERT
         try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
             if (generatedKeys.next()) {
                 work.setId(generatedKeys.getInt(1));
@@ -268,6 +267,7 @@ public class DBManager {
         }
         return users;
     }
+
     public static List<Work> getAllPublishedWorks() {
         List<Work> works = new ArrayList<>();
         Connection connection = null;
@@ -276,9 +276,9 @@ public class DBManager {
 
         try {
             connection = DatabaseConnection.getConnection();
-            String sql = "SELECT works.id, works.title, works.content, works.tags, works.kudosCount, works.userId, users.fullName, works.isDraft, works.timestamp " +
+            String sql = "SELECT works.id, works.title, works.content, works.tags, works.kudosCount, works.user_id, users.fullName, works.isDraft, works.timestamp " +
                          "FROM works " +
-                         "INNER JOIN users ON works.userId = users.id " +
+                         "INNER JOIN users ON works.user_id = users.id " +
                          "WHERE works.isDraft = 0 " +
                          "ORDER BY works.timestamp DESC";
             statement = connection.prepareStatement(sql);
@@ -290,7 +290,7 @@ public class DBManager {
                 String content = resultSet.getString("content");
                 String tags = resultSet.getString("tags");
                 int kudosCount = resultSet.getInt("kudosCount");
-                int userId = resultSet.getInt("userId");
+                int userId = resultSet.getInt("user_id");
                 String authorFullName = resultSet.getString("fullName");
                 boolean isDraft = resultSet.getBoolean("isDraft");
                 Timestamp timestamp = resultSet.getTimestamp("timestamp");
@@ -312,6 +312,7 @@ public class DBManager {
 
         return works;
     }
+
 
 
     public static List<Work> searchWorksByTitle(String title) {
@@ -410,8 +411,7 @@ public class DBManager {
         return false;
     }
 }
-
-    
+   
 
 public static boolean updateWork(Work work) {
     String query = "UPDATE works SET title = ?, content = ?, tags = ?, isDraft = ? WHERE id = ?";
@@ -429,6 +429,7 @@ public static boolean updateWork(Work work) {
         return false;
     }
 }
+
 
     public static boolean saveChapterToDatabase(int workId, String chapterTitle, int chapterNumber) {
         String sql = "INSERT INTO chapters (work_id, chapter_number, title) VALUES (?, ?, ?)";

@@ -14,6 +14,7 @@ import java.util.Optional;
 public class AccountManage {
 
     private final Stage stage;
+    private MainView mainView;
     private final ObservableList<Work> works;
     private Work selectedWork;
     private final User currentUser;
@@ -22,10 +23,11 @@ public class AccountManage {
     private Stage primaryStage;
     private final ObservableList<String> selectedTags = FXCollections.observableArrayList();
 
-    public AccountManage(Stage stage, User currentUser) {
+    public AccountManage(Stage stage, User currentUser, MainView mainView) {
         this.stage = stage;
         this.currentUser = currentUser;
         this.works = FXCollections.observableArrayList(DBManager.getWorksByCurrentUser(currentUser.getId()));
+        this.mainView = mainView; 
     }
 
     public void showManage() {
@@ -49,7 +51,7 @@ public class AccountManage {
         leftPane.setPadding(new Insets(10));
         leftPane.getChildren().add(workListView);
 
-        // Tombol Logout
+        
         Button logoutButton = new Button("Logout");
         logoutButton.setOnAction(event -> {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
@@ -59,11 +61,12 @@ public class AccountManage {
 
             Optional<ButtonType> result = alert.showAndWait();
             if (result.isPresent() && result.get() == ButtonType.OK) {
-          
+                mainView.setLoggedIn(false, currentUser);
                 stage.close();
                 System.out.println("User logged out.");
             }
         });
+
         leftPane.getChildren().add(logoutButton);
 
         GridPane rightPane = new GridPane();
@@ -133,7 +136,7 @@ public class AccountManage {
                     newWork.setContent(contentArea.getText());
                     newWork.setTags(String.join(", ", selectedTags));
                     newWork.setDraft(false);
-                    newWork.setUserId(currentUser.getId()); // Set user ID
+                    newWork.setUserId(currentUser.getId()); 
                     boolean success = DBManager.publishWork(newWork);
                     if (success) {
                         System.out.println("New work created and published successfully.");

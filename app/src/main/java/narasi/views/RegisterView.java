@@ -21,32 +21,6 @@ public class RegisterView {
         this.stage = stage;
         this.loginView = loginView;
     }
-    public class RegisterValidator {
-
-        public static boolean isValidUsername(String username) {
-            // Username harus terdiri dari huruf, angka, dengan panjang 4-16 karakter
-            String regex = "^[a-zA-Z0-9]{4,16}$";
-            Pattern pattern = Pattern.compile(regex);
-            Matcher matcher = pattern.matcher(username);
-            return matcher.matches();
-        }
-    
-        public static boolean isValidPassword(String password) {
-            // Password harus memiliki panjang minimal 8 karakter, minimal satu huruf besar, satu huruf kecil, dan satu angka
-            String regex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[a-zA-Z\\d]{8,}$";
-            Pattern pattern = Pattern.compile(regex);
-            Matcher matcher = pattern.matcher(password);
-            return matcher.matches();
-        }
-    
-        public static boolean isValidEmail(String email) {
-            // Validasi sederhana untuk alamat email
-            String regex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
-            Pattern pattern = Pattern.compile(regex);
-            Matcher matcher = pattern.matcher(email);
-            return matcher.matches();
-        }
-    }
 
     public void showRegister() {
         stage.setTitle("Register");
@@ -65,6 +39,7 @@ public class RegisterView {
         TextField emailField = new TextField();
 
         Button registerButton = new Button("Register");
+        Button cancelButton = new Button("Cancel");
 
         grid.add(usernameLabel, 0, 0);
         grid.add(usernameField, 1, 0);
@@ -74,7 +49,8 @@ public class RegisterView {
         grid.add(fullNameField, 1, 2);
         grid.add(emailLabel, 0, 3);
         grid.add(emailField, 1, 3);
-        grid.add(registerButton, 0, 5, 2, 1);
+        grid.add(registerButton, 0, 5);
+        grid.add(cancelButton, 1, 5);
 
         registerButton.setOnAction(event -> {
             String username = usernameField.getText();
@@ -92,15 +68,20 @@ public class RegisterView {
                 boolean success = DBManager.registerUser(username, password, fullName, email);
                 if (success) {
                     showAlert(Alert.AlertType.INFORMATION, "Registration Successful", "Registrasi berhasil!");
-                    stage.close();
-                    loginView.showLogin();
+                    stage.setScene(loginView.getLoginScene());
+                    stage.show();
                 } else {
                     showAlert(Alert.AlertType.ERROR, "Registration Failed", "Registrasi gagal. Silakan coba lagi.");
                 }
             }
         });
 
-        Scene scene = new Scene(grid, 1000, 600);
+        cancelButton.setOnAction(event -> {
+            stage.setScene(loginView.getLoginScene());
+            stage.show();
+        });
+
+        Scene scene = new Scene(grid, 300, 250);
         scene.getStylesheets().add(getClass().getResource("/RegisterStyle.css").toExternalForm());
         stage.setScene(scene);
         stage.show();
@@ -112,5 +93,29 @@ public class RegisterView {
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
+    }
+
+    public static class RegisterValidator {
+
+        public static boolean isValidUsername(String username) {
+            String regex = "^[a-zA-Z0-9]{4,16}$";
+            Pattern pattern = Pattern.compile(regex);
+            Matcher matcher = pattern.matcher(username);
+            return matcher.matches();
+        }
+
+        public static boolean isValidPassword(String password) {
+            String regex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[a-zA-Z\\d]{8,}$";
+            Pattern pattern = Pattern.compile(regex);
+            Matcher matcher = pattern.matcher(password);
+            return matcher.matches();
+        }
+
+        public static boolean isValidEmail(String email) {
+            String regex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
+            Pattern pattern = Pattern.compile(regex);
+            Matcher matcher = pattern.matcher(email);
+            return matcher.matches();
+        }
     }
 }

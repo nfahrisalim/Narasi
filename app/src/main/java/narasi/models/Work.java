@@ -12,7 +12,7 @@ public class Work {
     private List<Comment> comments;
     private int kudosCount;
     private int userId;
-    private String authorFullName; // New field for the author's full name
+    private String authorFullName; 
     private boolean isDraft;
     private List<Chapter> chapters;
     private Timestamp timestamp; 
@@ -25,7 +25,7 @@ public class Work {
         this.comments = new ArrayList<>();
         this.kudosCount = 0;
         this.userId = 0;
-        this.authorFullName = ""; // Initialize the new field
+        this.authorFullName = ""; 
         this.isDraft = true;
         this.chapters = new ArrayList<>();
         this.timestamp = new Timestamp(System.currentTimeMillis());
@@ -39,13 +39,12 @@ public class Work {
         this.comments = new ArrayList<>();
         this.kudosCount = kudosCount;
         this.userId = userId;
-        this.authorFullName = authorFullName; // Initialize the new field
+        this.authorFullName = authorFullName;
         this.isDraft = isDraft;
         this.chapters = new ArrayList<>();
         this.timestamp = timestamp;
     }
 
-    // Getters and setters...
 
     public int getId() {
         return id;
@@ -103,11 +102,11 @@ public class Work {
         this.userId = userId;
     }
 
-    public String getAuthorFullName() { // New getter
+    public String getAuthorFullName() { 
         return authorFullName;
     }
 
-    public void setAuthorFullName(String authorFullName) { // New setter
+    public void setAuthorFullName(String authorFullName) { 
         this.authorFullName = authorFullName;
     }
 

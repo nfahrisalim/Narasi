@@ -14,10 +14,19 @@ public class LoginView {
 
     private final Stage stage;
     private final MainView mainView;
+    private Scene loginScene;
 
     public LoginView(Stage stage, MainView mainView) {
         this.stage = stage;
         this.mainView = mainView;
+    }
+
+    public MainView getMainView() {
+        return mainView;
+    }
+
+    public Scene getLoginScene() {
+        return loginScene;
     }
 
     public void showLogin() {
@@ -41,10 +50,11 @@ public class LoginView {
         grid.add(passwordField, 1, 1);
         grid.add(loginButton, 0, 2);
         grid.add(registerButton, 1, 2);
+
         loginButton.setOnAction(event -> {
             String username = usernameField.getText();
             String password = passwordField.getText();
-        
+
             User user = DBManager.loginUser(username, password);
             if (user != null) {
                 System.out.println("Login berhasil!");
@@ -55,14 +65,15 @@ public class LoginView {
                 System.out.println("Login gagal. Silakan coba lagi.");
             }
         });
+
         registerButton.setOnAction(event -> {
-            RegisterView registrasiView = new RegisterView(new Stage(), this);
-            registrasiView.showRegister();
+            RegisterView registerView = new RegisterView(stage, this);
+            registerView.showRegister();
         });
 
-        Scene scene = new Scene(grid, 300, 200);
-        scene.getStylesheets().add(getClass().getResource("/LoginStyle.css").toExternalForm());
-        stage.setScene(scene);
+        loginScene = new Scene(grid, 300, 200);
+        loginScene.getStylesheets().add(getClass().getResource("/LoginStyle.css").toExternalForm());
+        stage.setScene(loginScene);
         stage.show();
     }
 }

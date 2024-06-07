@@ -1,6 +1,6 @@
 package narasi.models;
 
-import java.util.Date; // tambahkan impor ini
+import java.util.Date; 
 
 public class Comment {
     private String content;

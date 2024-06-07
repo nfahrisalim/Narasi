@@ -1,17 +1,16 @@
 package narasi.views;
-
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.stage.Stage;
+import javafx.scene.Scene;
 import narasi.models.Work;
 import narasi.models.DBManager;
 import narasi.models.User;
 import narasi.models.Comment;
 import java.util.List;
-import javafx.scene.Scene;
 
 public class ReadingView {
     private BorderPane root;
@@ -19,10 +18,12 @@ public class ReadingView {
     private Label kudosLabel;
     private TextArea readingArea;
     private Stage primaryStage;
+    private MainView mainView;
     private boolean isKudosClicked = false;
 
-    public ReadingView(Stage primaryStage, Work work) {
+    public ReadingView(Stage primaryStage, Work work, MainView mainView) {
         this.primaryStage = primaryStage;
+        this.mainView = mainView;
         this.kudosCount = DBManager.getKudosCount(work.getId());
         initializeUI(work);
     }
@@ -42,7 +43,7 @@ public class ReadingView {
         centerBox.setPadding(new Insets(10));
         String content = work.getContent();
         int workId = DBManager.getWorkIdByContent(content);
-        
+
         if (workId == -1) {
             System.out.println("No work found with the provided content.");
         } else if (!DBManager.workExists(workId)) {
@@ -65,7 +66,6 @@ public class ReadingView {
                 readingArea.setFont(Font.font("Arial", 14));
                 readingArea.setWrapText(true);
 
-                // Combine content with comments
                 StringBuilder contentWithComments = new StringBuilder(combinedContent);
                 List<Comment> comments = DBManager.getCommentsByWorkId(workId);
                 for (Comment comment : comments) {
@@ -109,7 +109,9 @@ public class ReadingView {
             commentView.show();
         });
 
-        closeButton.setOnAction(event -> primaryStage.close());
+        closeButton.setOnAction(event -> {
+            primaryStage.close();
+        });
 
         HBox leftBox = new HBox(10);
         leftBox.setAlignment(Pos.CENTER_LEFT);
@@ -127,17 +129,21 @@ public class ReadingView {
         bottomBox.getChildren().addAll(leftBox, closeButton, rightBox);
 
         root.setBottom(bottomBox);
-        Scene scene = new Scene(root);
-        primaryStage.setFullScreen(true);
 
+        Scene scene = new Scene(root);
         primaryStage.setTitle("N A R A S I - Platform Karya Tulis Mahasiswa");
-        scene.getStylesheets().add(getClass().getResource("/ReadingStyle.css").toExternalForm());
         primaryStage.setScene(scene);
+        primaryStage.setFullScreen(true);
+        scene.getStylesheets().add(getClass().getResource("/ReadingStyle.css").toExternalForm());
         primaryStage.show();
     }
 
     public void addCommentToReadingArea(Comment comment) {
         String currentText = readingArea.getText();
         readingArea.setText(currentText + "\n-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n" + comment.displayComment());
+    }
+
+    public BorderPane getView() {
+        return root;
     }
 }
