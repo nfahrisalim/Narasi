@@ -1,6 +1,4 @@
 
-
-
 // Class comment with String
 public class Comment {
     private String content;

@@ -49,8 +49,8 @@ public class RegisterView {
         grid.add(fullNameField, 1, 2);
         grid.add(emailLabel, 0, 3);
         grid.add(emailField, 1, 3);
-        grid.add(registerButton, 0, 5);
-        grid.add(cancelButton, 1, 5);
+        grid.add(registerButton, 1, 5);
+        grid.add(cancelButton, 0, 5);
 
         registerButton.setOnAction(event -> {
             String username = usernameField.getText();
@@ -81,7 +81,7 @@ public class RegisterView {
             stage.show();
         });
 
-        Scene scene = new Scene(grid, 300, 250);
+        Scene scene = new Scene(grid, 300, 300);
         scene.getStylesheets().add(getClass().getResource("/RegisterStyle.css").toExternalForm());
         stage.setScene(scene);
         stage.show();

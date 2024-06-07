@@ -1,22 +1,109 @@
 .root {
-    -fx-base: #8576FF;
+    -fx-font-family: "Helvetica";
+    -fx-base: #FFFFFF;
+    -fx-background-color: #8576FF; /* Warna latar belakang ungu */
 }
 
 .button {
-    -fx-background-color: #6FDCE3;
+    -fx-background-color: linear-gradient(to bottom, #6FDCE3, #5CC2CA);
     -fx-text-fill: white;
-    -fx-font-family: "Helvetica";
+    -fx-font-size: 12px; /* Ukuran font lebih kecil */
+    -fx-padding: 8px 16px;
+    -fx-border-radius: 25px;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.3), 10, 0, 0, 5);
+    -fx-background-insets: 0,1,2,3;
+    -fx-background-radius: 25,24,23,22;
+    -fx-transition: background-color 0.3s ease, effect 0.3s ease;
+}
+
+.button:hover {
+    -fx-background-color: linear-gradient(to bottom, #5CC2CA, #4AA5AC);
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.5), 10, 0, 0, 7);
+}
+
+.button:pressed {
+    -fx-background-color: linear-gradient(to bottom, #4AA5AC, #3C8990);
+    -fx-effect: none;
 }
 
 .label {
     -fx-text-fill: #333333;
-    -fx-font-family: "Helvetica";
+    -fx-font-size: 14px; /* Ukuran font lebih kecil */
+    -fx-font-weight: bold;
 }
 
 .text-field {
     -fx-background-color: #F0F0F0;
     -fx-border-color: #CCCCCC;
+    -fx-border-width: 2px;
+    -fx-border-radius: 5px;
+    -fx-font-size: 14px; /* Ukuran font lebih kecil */
+    -fx-padding: 8px;
+    -fx-transition: border-color 0.3s ease, background-color 0.3s ease;
+}
+
+.text-field:focused {
+    -fx-border-color: #8576FF;
+    -fx-background-color: #FFFFFF;
+}
+
+.text-field:hover {
+    -fx-border-color: #A0A0A0;
+}
+
+.text-field:disabled {
+    -fx-background-color: #E0E0E0;
+    -fx-border-color: #C0C0C0;
+    -fx-text-fill: #A0A0A0;
+}
+
+.text-field:focused:disabled {
+    -fx-border-color: #C0C0C0;
+}
+
+.text-area {
+    -fx-background-color: #F9F9F9;
+    -fx-border-color: #CCCCCC;
+    -fx-border-width: 2px;
+    -fx-border-radius: 5px;
+    -fx-font-size: 14px; /* Ukuran font lebih kecil */
+    -fx-padding: 8px;
+    -fx-transition: border-color 0.3s ease, background-color 0.3s ease;
+}
+
+.text-area:focused {
+    -fx-border-color: #8576FF;
+    -fx-background-color: #FFFFFF;
+}
+
+.text-area:hover {
+    -fx-border-color: #A0A0A0;
+}
+
+.text-area:disabled {
+    -fx-background-color: #E0E0E0;
+    -fx-border-color: #C0C0C0;
+    -fx-text-fill: #A0A0A0;
+}
+
+.tooltip {
+    -fx-background-color: #333333;
+    -fx-text-fill: white;
+    -fx-padding: 8px; /* Padding lebih kecil */
+    -fx-font-size: 12px;
+    -fx-border-radius: 5px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.3), 5, 0, 0, 2);
+}
+
+.vbox {
+    -fx-padding: 20px;
+    -fx-spacing: 15px;
+    -fx-background-color: linear-gradient(to bottom, #8576FF, #6B4EFF); /* Gradien ungu */
+    -fx-border-color: #CCCCCC;
     -fx-border-width: 1px;
-    -fx-border-radius: 3px;
-    -fx-font-family: "Helvetica";
+    -fx-border-radius: 10px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.1), 5, 0, 0, 2);
+    -fx-pref-width: 600px; /* Lebar VBox */
+    -fx-pref-height: 600px; /* Tinggi VBox */
 }

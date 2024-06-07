@@ -10,7 +10,7 @@ public class App extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        String iconPath = "file:/D:/College/Programming/Java/Project/Narasi/app/src/main/resources/Narasi.png";
+        String iconPath = "file:C:\\Users\\LENOVO\\Documents\\PBO semester 2\\Projek pbo after seminar\\Narasi\\app\\src\\main\\resources\\Narasi.png";
         Image icon = new Image(iconPath);
 
     

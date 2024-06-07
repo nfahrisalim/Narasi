@@ -53,7 +53,6 @@ public class MainView extends Application {
             loginView.showLogin();
         });
 
-
         TextField searchField = new TextField();
         searchField.setPromptText("Search...");
 
@@ -76,7 +75,7 @@ public class MainView extends Application {
 
 
         Button jenisKaryaButton = new Button("Jenis Karya");
-        jenisKaryaButton.setMinWidth(120);
+        jenisKaryaButton.setMinWidth(130);
         VBox jenisKaryaSubButtons = new VBox();
         jenisKaryaSubButtons.setPadding(new Insets(7));
         jenisKaryaSubButtons.setSpacing(5);
@@ -112,7 +111,7 @@ public class MainView extends Application {
 
 
         Button genreButton = new Button("Genre");
-        genreButton.setMinWidth(120);
+        genreButton.setMinWidth(130);
         VBox genreSubButtons = new VBox();
         genreSubButtons.setPadding(new Insets(5));
         genreSubButtons.setSpacing(5);

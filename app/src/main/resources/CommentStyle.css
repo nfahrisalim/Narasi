@@ -1,6 +1,6 @@
 .root {
     -fx-background-color: #8576FF;
-    -fx-font-family: "Montserrat";
+    -fx-font-family: "Helvetica";
 }
 
 .label {
@@ -13,7 +13,7 @@
 .text-area {
     -fx-background-color: #F0F0F0;
     -fx-text-fill: #333333;
-    -fx-font-family: "Montserrat";
+    -fx-font-family: "Helvetica";
     -fx-font-size: 14px;
     -fx-border-color: #CCCCCC;
     -fx-border-width: 1px;
@@ -32,7 +32,7 @@
 .button {
     -fx-background-color: linear-gradient(to bottom, #6FDCE3, #5CC2CA);
     -fx-text-fill: white;
-    -fx-font-family: "Montserrat";
+    -fx-font-family: "Helvetica";
     -fx-font-size: 16px;
     -fx-border-radius: 5px;
     -fx-cursor: hand;
@@ -53,16 +53,7 @@
     -fx-effect: none;
 }
 
-.hbox {
-    -fx-alignment: center;
-    -fx-spacing: 10px;
-}
-
 .vbox {
     -fx-spacing: 10px;
     -fx-padding: 10px;
-}
-
-.root:hover {
-    -fx-background-color: #6C63FF;
 }

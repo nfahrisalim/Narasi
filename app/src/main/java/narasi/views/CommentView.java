@@ -1,3 +1,4 @@
+
 package narasi.views;
 
 import javafx.geometry.Insets;
@@ -41,6 +42,9 @@ public class CommentView {
 
         Scene scene = new Scene(root, 400, 300);
         commentStage.setScene(scene);
+
+        String css = getClass().getResource("/CommentStyle.css").toExternalForm();
+        scene.getStylesheets().add(css);
     }
 
     private void submitComment() {
@@ -51,7 +55,6 @@ public class CommentView {
 
         Comment comment = new Comment(content);
         DBManager.addCommentToWork(work.getId(), comment);
-
         readingView.addCommentToReadingArea(comment);
 
         commentStage.close();
@@ -61,3 +64,4 @@ public class CommentView {
         commentStage.show();
     }
 }
+
