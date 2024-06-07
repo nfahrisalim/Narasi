@@ -459,6 +459,7 @@ public static boolean updateWork(Work work) {
             return false;
         }
     }
+
     public static List<Work> searchWorksByTag(String tag) {
         List<Work> works = new ArrayList<>();
         String query = "SELECT * FROM works WHERE tags LIKE ?";
@@ -481,13 +482,14 @@ public static boolean updateWork(Work work) {
         return works;
     }
 
-    public static boolean addChapter(int workId, int chapterNumber, String title) {
-        String query = "INSERT INTO chapters (work_id, chapter_number, title) VALUES (?, ?, ?)";
+    public static boolean addChapter(int workId, int chapterNumber, String title, String content) {
+        String query = "INSERT INTO chapters (work_id, chapter_number, title, content) VALUES (?, ?, ?, ?)";
         try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setInt(1, workId);
             statement.setInt(2, chapterNumber);
             statement.setString(3, title);
+            statement.setString(4, content);
             int rowsInserted = statement.executeUpdate();
             return rowsInserted > 0;
         } catch (SQLException e) {
@@ -495,7 +497,82 @@ public static boolean updateWork(Work work) {
             return false;
         }
     }
+
+    public static List<Chapter> getChaptersByWorkId(int workId) {
+        List<Chapter> chapters = new ArrayList<>();
+        String query = "SELECT * FROM chapters WHERE work_id = ? ORDER BY chapter_number ASC";
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, workId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    Chapter chapter = new Chapter(
+                        resultSet.getInt("id"),
+                        resultSet.getInt("work_id"),
+                        resultSet.getInt("chapter_number"),
+                        resultSet.getString("title"),
+                        resultSet.getString("content"),
+                        resultSet.getTimestamp("timestamp")
+                    );
+                    chapters.add(chapter);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return chapters;
+    }
+
+    public static Chapter getChapterById(int chapterId) {
+        String query = "SELECT * FROM chapters WHERE id = ?";
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, chapterId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return new Chapter(
+                        resultSet.getInt("id"),
+                        resultSet.getInt("work_id"),
+                        resultSet.getInt("chapter_number"),
+                        resultSet.getString("title"),
+                        resultSet.getString("content"),
+                        resultSet.getTimestamp("timestamp")
+                    );
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static boolean updateChapter(int chapterId, String title, String content) {
+        String query = "UPDATE chapters SET title = ?, content = ? WHERE id = ?";
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setString(1, title);
+            statement.setString(2, content);
+            statement.setInt(3, chapterId);
+            int rowsUpdated = statement.executeUpdate();
+            return rowsUpdated > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
     
+    public static boolean deleteChapter(int chapterId) {
+        String query = "DELETE FROM chapters WHERE id = ?";
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, chapterId);
+            int rowsDeleted = statement.executeUpdate();
+            return rowsDeleted > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 
     public static boolean registerUser(String username, String password, String fullName, String email) {
         String query = "INSERT INTO users (username, password, fullName, email) VALUES (?, ?, ?, ?)";
@@ -533,8 +610,7 @@ public static boolean updateWork(Work work) {
                     work.setUserId(resultSet.getInt("user_id"));
                     work.setDraft(resultSet.getBoolean("isDraft"));
                     work.setTimestamp(resultSet.getTimestamp("timestamp"));
-                    // Set fullname from users table
-                    work.setAuthorFullName(resultSet.getString("fullName")); // Use setAuthorFullName
+                    work.setAuthorFullName(resultSet.getString("fullName")); 
                     works.add(work);
                 }
             }

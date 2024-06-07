@@ -330,8 +330,3 @@ public class MainView extends Application {
         }
     }
 }
-
-
-
-
-
