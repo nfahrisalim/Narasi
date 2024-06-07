@@ -53,7 +53,9 @@ public class ReadingView {
         Button kudosButton = new Button("Like");
         Button commentButton = new Button("Comment");
         Button closeButton = new Button("Close");
+        Button prevButton = new Button("Prev");
         Button nextButton = new Button("Next");
+        Label indexLabel = new Label((currentChapterIndex + 1) + " / " + work.getChapters().size());
 
         kudosButton.setOnAction(event -> {
             if (!isKudosClicked) {
@@ -75,31 +77,46 @@ public class ReadingView {
             mainView.start(new Stage());
         });
 
+        prevButton.setOnAction(event -> {
+            if (currentChapterIndex > 0) {
+                currentChapterIndex--;
+                indexLabel.setText((currentChapterIndex + 1) + " / " + work.getChapters().size());
+                updateContent(centerBox);
+            }
+        });
+
         nextButton.setOnAction(event -> {
             if (currentChapterIndex < work.getChapters().size() - 1) {
                 currentChapterIndex++;
+                indexLabel.setText((currentChapterIndex + 1) + " / " + work.getChapters().size());
                 updateContent(centerBox);
             }
         });
 
         HBox leftBox = new HBox(10);
         leftBox.setAlignment(Pos.CENTER_LEFT);
-        leftBox.getChildren().add(commentButton);
+        leftBox.getChildren().addAll(commentButton, closeButton);
+
+        HBox centerBoxBottom = new HBox(10);
+        centerBoxBottom.setAlignment(Pos.CENTER);
+        centerBoxBottom.getChildren().addAll(prevButton, indexLabel, nextButton);
 
         HBox rightBox = new HBox(5);
         rightBox.setAlignment(Pos.CENTER_RIGHT);
-        rightBox.getChildren().addAll(kudosButton, kudosLabel, nextButton);
+        rightBox.getChildren().addAll(kudosButton, kudosLabel);
 
         HBox bottomBox = new HBox(10);
         bottomBox.setPadding(new Insets(10));
         bottomBox.setAlignment(Pos.CENTER);
         HBox.setHgrow(leftBox, Priority.ALWAYS);
+        HBox.setHgrow(centerBoxBottom, Priority.ALWAYS);
         HBox.setHgrow(rightBox, Priority.ALWAYS);
-        bottomBox.getChildren().addAll(leftBox, closeButton, rightBox);
+        bottomBox.getChildren().addAll(leftBox, centerBoxBottom, rightBox);
 
         root.setBottom(bottomBox);
 
-        Scene scene = new Scene(root);
+        Scene scene = new
+        Scene(root);
         primaryStage.setTitle("N A R A S I - Platform Karya Tulis Mahasiswa");
         primaryStage.setScene(scene);
         primaryStage.setFullScreen(true);
@@ -110,18 +127,24 @@ public class ReadingView {
     private void updateContent(VBox centerBox) {
         centerBox.getChildren().clear();
 
-        if (work.getChapters().isEmpty()) {
-            System.out.println("No chapters available for this work.");
-            return;
+        String content;
+        if (currentChapterIndex == 0) {
+            // Chapter 1: Get content from the work itself
+            content = work.getContent();
+        } else {
+            // Chapter 2 and beyond: Get content from the chapters list
+            if (currentChapterIndex < work.getChapters().size()) {
+                Chapter currentChapter = work.getChapters().get(currentChapterIndex);
+                content = currentChapter.getTitle() + "\n\n" + currentChapter.getContent();
+            } else {
+                System.out.println("Chapter index out of bounds.");
+                return;
+            }
         }
 
-        Chapter currentChapter = work.getChapters().get(currentChapterIndex);
-        String content = currentChapter.getTitle() + "\n\n" + work.getContent();
-        int workId = DBManager.getWorkIdByContent(content);
+        int workId = work.getId();
 
-        if (workId == -1) {
-            System.out.println("No work found with the provided content.");
-        } else if (!DBManager.workExists(workId)) {
+        if (!DBManager.workExists(workId)) {
             System.out.println("Work with ID: " + workId + " does not exist.");
         } else {
             User user = DBManager.getUserByWorkId(workId);
@@ -132,9 +155,6 @@ public class ReadingView {
 
                 String userInfo = "Di publish oleh:\n" + user.getFullName() + "\n" + user.getEmail();
                 String combinedContent = userInfo + "\n-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n" + content;
-
-                Label readingAreaLabel = new Label();
-                readingAreaLabel.setFont(Font.font("Arial", 20));
 
                 readingArea = new TextArea(combinedContent);
                 readingArea.setEditable(false);

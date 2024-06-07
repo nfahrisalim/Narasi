@@ -459,6 +459,7 @@ public static boolean updateWork(Work work) {
             return false;
         }
     }
+
     public static List<Work> searchWorksByTag(String tag) {
         List<Work> works = new ArrayList<>();
         String query = "SELECT * FROM works WHERE tags LIKE ?";
@@ -572,7 +573,6 @@ public static boolean updateWork(Work work) {
             return false;
         }
     }
-    
 
     public static boolean registerUser(String username, String password, String fullName, String email) {
         String query = "INSERT INTO users (username, password, fullName, email) VALUES (?, ?, ?, ?)";
