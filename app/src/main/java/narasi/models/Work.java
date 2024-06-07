@@ -12,10 +12,10 @@ public class Work {
     private List<Comment> comments;
     private int kudosCount;
     private int userId;
-    private String authorFullName; 
+    private String authorFullName;
     private boolean isDraft;
     private List<Chapter> chapters;
-    private Timestamp timestamp; 
+    private Timestamp timestamp;
 
     public Work() {
         this.id = 0;
@@ -25,7 +25,7 @@ public class Work {
         this.comments = new ArrayList<>();
         this.kudosCount = 0;
         this.userId = 0;
-        this.authorFullName = ""; 
+        this.authorFullName = "";
         this.isDraft = true;
         this.chapters = new ArrayList<>();
         this.timestamp = new Timestamp(System.currentTimeMillis());
@@ -44,7 +44,6 @@ public class Work {
         this.chapters = new ArrayList<>();
         this.timestamp = timestamp;
     }
-
 
     public int getId() {
         return id;
@@ -102,11 +101,11 @@ public class Work {
         this.userId = userId;
     }
 
-    public String getAuthorFullName() { 
+    public String getAuthorFullName() {
         return authorFullName;
     }
 
-    public void setAuthorFullName(String authorFullName) { 
+    public void setAuthorFullName(String authorFullName) {
         this.authorFullName = authorFullName;
     }
 
@@ -126,8 +125,10 @@ public class Work {
         this.chapters = chapters;
     }
 
-    public void addChapter(String title, int number) {
-        this.chapters.add(new Chapter(number, title));
+    public void addChapter(int workId, int number, String title, String content) {
+        int chapterId = this.chapters.size() + 1; 
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        this.chapters.add(new Chapter(workId, number, chapterId, title, content, timestamp));
     }
 
     public Timestamp getTimestamp() {

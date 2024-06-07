@@ -1,4 +1,5 @@
 package narasi.views;
+
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.text.Font;
@@ -10,6 +11,8 @@ import narasi.models.Work;
 import narasi.models.DBManager;
 import narasi.models.User;
 import narasi.models.Comment;
+import narasi.models.Chapter;
+
 import java.util.List;
 
 public class ReadingView {
@@ -20,10 +23,13 @@ public class ReadingView {
     private Stage primaryStage;
     private MainView mainView;
     private boolean isKudosClicked = false;
+    private int currentChapterIndex = 0;
+    private Work work;
 
     public ReadingView(Stage primaryStage, Work work, MainView mainView) {
         this.primaryStage = primaryStage;
         this.mainView = mainView;
+        this.work = work;
         this.kudosCount = DBManager.getKudosCount(work.getId());
         initializeUI(work);
     }
@@ -41,7 +47,76 @@ public class ReadingView {
 
         VBox centerBox = new VBox(10);
         centerBox.setPadding(new Insets(10));
-        String content = work.getContent();
+        updateContent(centerBox);
+
+        kudosLabel = new Label(String.valueOf(kudosCount));
+        Button kudosButton = new Button("Like");
+        Button commentButton = new Button("Comment");
+        Button closeButton = new Button("Close");
+        Button nextButton = new Button("Next");
+
+        kudosButton.setOnAction(event -> {
+            if (!isKudosClicked) {
+                kudosCount++;
+                kudosLabel.setText(String.valueOf(kudosCount));
+                System.out.println("Updating kudos count to: " + kudosCount);
+                DBManager.updateKudosCount(work.getId(), kudosCount);
+                isKudosClicked = true;
+            }
+        });
+
+        commentButton.setOnAction(event -> {
+            CommentView commentView = new CommentView(work, this);
+            commentView.show();
+        });
+
+        closeButton.setOnAction(event -> {
+            primaryStage.close();
+            mainView.start(new Stage());
+        });
+
+        nextButton.setOnAction(event -> {
+            if (currentChapterIndex < work.getChapters().size() - 1) {
+                currentChapterIndex++;
+                updateContent(centerBox);
+            }
+        });
+
+        HBox leftBox = new HBox(10);
+        leftBox.setAlignment(Pos.CENTER_LEFT);
+        leftBox.getChildren().add(commentButton);
+
+        HBox rightBox = new HBox(5);
+        rightBox.setAlignment(Pos.CENTER_RIGHT);
+        rightBox.getChildren().addAll(kudosButton, kudosLabel, nextButton);
+
+        HBox bottomBox = new HBox(10);
+        bottomBox.setPadding(new Insets(10));
+        bottomBox.setAlignment(Pos.CENTER);
+        HBox.setHgrow(leftBox, Priority.ALWAYS);
+        HBox.setHgrow(rightBox, Priority.ALWAYS);
+        bottomBox.getChildren().addAll(leftBox, closeButton, rightBox);
+
+        root.setBottom(bottomBox);
+
+        Scene scene = new Scene(root);
+        primaryStage.setTitle("N A R A S I - Platform Karya Tulis Mahasiswa");
+        primaryStage.setScene(scene);
+        primaryStage.setFullScreen(true);
+        scene.getStylesheets().add(getClass().getResource("/ReadingStyle.css").toExternalForm());
+        primaryStage.show();
+    }
+
+    private void updateContent(VBox centerBox) {
+        centerBox.getChildren().clear();
+
+        if (work.getChapters().isEmpty()) {
+            System.out.println("No chapters available for this work.");
+            return;
+        }
+
+        Chapter currentChapter = work.getChapters().get(currentChapterIndex);
+        String content = currentChapter.getTitle() + "\n\n" + work.getContent();
         int workId = DBManager.getWorkIdByContent(content);
 
         if (workId == -1) {
@@ -88,54 +163,6 @@ public class ReadingView {
         centerBox.getChildren().addAll(readingBox);
         VBox.setVgrow(readingBox, Priority.ALWAYS);
         root.setCenter(centerBox);
-
-        kudosLabel = new Label(String.valueOf(kudosCount));
-        Button kudosButton = new Button("Like");
-        Button commentButton = new Button("Comment");
-        Button closeButton = new Button("Close");
-
-        kudosButton.setOnAction(event -> {
-            if (!isKudosClicked) {
-                kudosCount++;
-                kudosLabel.setText(String.valueOf(kudosCount));
-                System.out.println("Updating kudos count to: " + kudosCount);
-                DBManager.updateKudosCount(work.getId(), kudosCount);
-                isKudosClicked = true;
-            }
-        });
-
-        commentButton.setOnAction(event -> {
-            CommentView commentView = new CommentView(work, this);
-            commentView.show();
-        });
-
-        closeButton.setOnAction(event -> {
-            primaryStage.close();
-        });
-
-        HBox leftBox = new HBox(10);
-        leftBox.setAlignment(Pos.CENTER_LEFT);
-        leftBox.getChildren().add(commentButton);
-
-        HBox rightBox = new HBox(5);
-        rightBox.setAlignment(Pos.CENTER_RIGHT);
-        rightBox.getChildren().addAll(kudosButton, kudosLabel);
-
-        HBox bottomBox = new HBox(10);
-        bottomBox.setPadding(new Insets(10));
-        bottomBox.setAlignment(Pos.CENTER);
-        HBox.setHgrow(leftBox, Priority.ALWAYS);
-        HBox.setHgrow(rightBox, Priority.ALWAYS);
-        bottomBox.getChildren().addAll(leftBox, closeButton, rightBox);
-
-        root.setBottom(bottomBox);
-
-        Scene scene = new Scene(root);
-        primaryStage.setTitle("N A R A S I - Platform Karya Tulis Mahasiswa");
-        primaryStage.setScene(scene);
-        primaryStage.setFullScreen(true);
-        scene.getStylesheets().add(getClass().getResource("/ReadingStyle.css").toExternalForm());
-        primaryStage.show();
     }
 
     public void addCommentToReadingArea(Comment comment) {
