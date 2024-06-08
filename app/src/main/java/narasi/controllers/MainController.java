@@ -2,6 +2,8 @@ package narasi.controllers;
 
 import java.util.List;
 import javafx.scene.control.TextField;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.scene.control.ListView;
 import narasi.models.Work;
 import narasi.models.DBManager;
@@ -23,6 +25,31 @@ public class MainController {
             workListView.getItems().setAll(searchResults);
         });
     }
+
+    public void refreshWorkList() {
+        List<Work> works = DBManager.getAllPublishedWorks();
+        ObservableList<Work> observableWorks = FXCollections.observableArrayList(works);
+        workListView.setItems(observableWorks);
+    }
+
+    public void deleteWork(int workId) {
+        System.out.println("Attempting to delete work with id: " + workId);
+        boolean isDeleted = DBManager.deleteWork(workId);
+        if (isDeleted) {
+            System.out.println("Work deleted successfully from the database.");
+            refreshWorkList();
+        } else {
+            System.out.println("Failed to delete work from the database.");
+        }
+    }
+
+    public void handleDeleteButtonAction() {
+        Work selectedWork = workListView.getSelectionModel().getSelectedItem();
+        if (selectedWork != null) {
+            deleteWork(selectedWork.getId());
+        }
+    }
+
 
     public void showJenisKarya() {
         // Implement logic to show jenis karya

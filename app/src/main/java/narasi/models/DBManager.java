@@ -254,12 +254,12 @@ public class DBManager {
              PreparedStatement statement = connection.prepareStatement(query);
              ResultSet resultSet = statement.executeQuery()) {
             while (resultSet.next()) {
-                RegisteredUser user = new RegisteredUser(); // Gunakan konstruktor tambahan
+                RegisteredUser user = new RegisteredUser(); 
                 user.setUsername(resultSet.getString("username"));
                 user.setPassword(resultSet.getString("password"));
                 user.setFullName(resultSet.getString("fullName"));
                 user.setEmail(resultSet.getString("email"));
-                user.setUserId(resultSet.getInt("id")); // Setel ID secara terpisah
+                user.setUserId(resultSet.getInt("id")); 
                 users.add(user);
             }
         } catch (SQLException e) {
@@ -447,19 +447,50 @@ public static boolean updateWork(Work work) {
         }
     }
 
-    public static boolean deleteWork(String title) {
-        String query = "DELETE FROM works WHERE title = ?";
-        try (Connection connection = DatabaseConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
-            statement.setString(1, title);
-            int rowsDeleted = statement.executeUpdate();
-            return rowsDeleted > 0;
+    public static boolean deleteWork(int workId) {
+        String query = "DELETE FROM works WHERE id = ?";
+        Connection connection = null;
+        try {
+            connection = DatabaseConnection.getConnection();
+            connection.setAutoCommit(false); // Nonaktifkan auto-commit untuk mengelola transaksi secara manual
+
+            try (PreparedStatement statement = connection.prepareStatement(query)) {
+                statement.setInt(1, workId);
+                System.out.println("Executing delete statement...");
+                int rowsAffected = statement.executeUpdate();
+                System.out.println("Rows affected: " + rowsAffected);
+                if (rowsAffected > 0) {
+                    connection.commit(); // Commit perubahan
+                    System.out.println("Work with id " + workId + " deleted successfully.");
+                    return true;
+                } else {
+                    System.out.println("No work found with id " + workId + ".");
+                }
+            }
         } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
+            System.err.println("SQL error when deleting work with id " + workId + ": " + e.getMessage());
+            if (connection != null) {
+                try {
+                    connection.rollback(); // Rollback jika terjadi kesalahan
+                    System.out.println("Rolled back changes due to error.");
+                } catch (SQLException rollbackEx) {
+                    System.err.println("Error during rollback: " + rollbackEx.getMessage());
+                }
+            }
+        } finally {
+            if (connection != null) {
+                try {
+                    connection.setAutoCommit(true); // Aktifkan kembali auto-commit
+                    connection.close();
+                } catch (SQLException closeEx) {
+                    System.err.println("Error when closing connection: " + closeEx.getMessage());
+                }
+            }
         }
+        return false;
     }
 
+    
     public static List<Work> searchWorksByTag(String tag) {
         List<Work> works = new ArrayList<>();
         String query = "SELECT * FROM works WHERE tags LIKE ?";
@@ -483,20 +514,22 @@ public static boolean updateWork(Work work) {
     }
 
     public static boolean addChapter(int workId, int chapterNumber, String title, String content) {
-        String query = "INSERT INTO chapters (work_id, chapter_number, title, content) VALUES (?, ?, ?, ?)";
-        try (Connection connection = DatabaseConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
-            statement.setInt(1, workId);
-            statement.setInt(2, chapterNumber);
-            statement.setString(3, title);
-            statement.setString(4, content);
-            int rowsInserted = statement.executeUpdate();
-            return rowsInserted > 0;
+        String sql = "INSERT INTO chapters (work_id, number, title, content) VALUES (?, ?, ?, ?)";
+    
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, workId);
+            pstmt.setInt(2, chapterNumber);
+            pstmt.setString(3, title);
+            pstmt.setString(4, content);
+            pstmt.executeUpdate();
+            return true;
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
             return false;
         }
     }
+    
 
     public static List<Chapter> getChaptersByWorkId(int workId) {
         List<Chapter> chapters = new ArrayList<>();

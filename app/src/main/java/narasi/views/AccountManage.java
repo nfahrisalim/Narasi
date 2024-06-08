@@ -23,12 +23,13 @@ public class AccountManage {
     private TextField titleField;
     private Stage primaryStage;
     private final ObservableList<String> selectedTags = FXCollections.observableArrayList();
+    private Label chapterIndicator; // Tambahkan label untuk indikator halaman
 
     public AccountManage(Stage stage, User currentUser, MainView mainView) {
         this.stage = stage;
         this.currentUser = currentUser;
         this.works = FXCollections.observableArrayList(DBManager.getWorksByCurrentUser(currentUser.getId()));
-        this.mainView = mainView; 
+        this.mainView = mainView;
     }
 
     public void showManage() {
@@ -37,7 +38,10 @@ public class AccountManage {
         BorderPane root = new BorderPane();
 
         ListView<String> workListView = new ListView<>();
-        ObservableList<String> workTitles = FXCollections.observableArrayList(DBManager.getWorkTitlesByCurrentUser(currentUser.getId()));
+        ObservableList<String> workTitles = FXCollections.observableArrayList();
+        for (Work work : works) {
+            workTitles.add(work.getTitle() + (work.isDraft() ? " (Draft)" : ""));
+        }
         workListView.setItems(workTitles);
         workListView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             int selectedIndex = workListView.getSelectionModel().getSelectedIndex();
@@ -79,11 +83,14 @@ public class AccountManage {
 
         titleField = new TextField();
         titleField.setPromptText("Title");
+        titleField.setPrefHeight(40); // Mengatur tinggi TextField
 
         contentArea = new TextArea();
         contentArea.setPromptText("Write your content here...");
-        contentArea.setPrefRowCount(10);
-        contentArea.setPrefColumnCount(60); 
+        contentArea.setPrefRowCount(90);
+
+        chapterIndicator = new Label(); // Inisialisasi label indikator halaman
+        updateChapterIndicator(); // Perbarui indikator halaman awal
 
         Button saveDraftButton = new Button("Save Draft");
         saveDraftButton.setOnAction(event -> {
@@ -161,42 +168,50 @@ public class AccountManage {
         });
 
         Button addChapterButton = new Button("Add Chapter");
-        addChapterButton.setOnAction(event -> {
-            if (selectedWork != null) {
-                TextInputDialog dialog = new TextInputDialog();
-                dialog.setTitle("Add Chapter");
-                dialog.setHeaderText("Create a new chapter");
-                dialog.setContentText("Please enter the chapter title:");
+addChapterButton.setOnAction(event -> {
+    if (selectedWork != null) {
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("Add Chapter");
+        dialog.setHeaderText("Create a new chapter");
+        dialog.setContentText("Please enter the chapter title:");
 
-                Optional<String> result = dialog.showAndWait();
-                if (result.isPresent()) {
-                    String chapterTitle = result.get();
-                    Chapter newChapter = new Chapter(0, selectedWork.getId(), selectedWork.getChapters().size() + 1, chapterTitle, "Chapter content here...", new Timestamp(System.currentTimeMillis()));
-                    if (DBManager.addChapter(newChapter.getWorkId(), newChapter.getChapterNumber(), newChapter.getTitle(), newChapter.getContent())) {
-                        selectedWork.getChapters().add(newChapter);
-                        System.out.println("Chapter added successfully.");
-                    } else {
-                        System.out.println("Failed to add chapter.");
-                    }
-                }
+        Optional<String> result = dialog.showAndWait();
+        if (result.isPresent()) {
+            String chapterTitle = result.get();
+            Chapter newChapter = new Chapter(0, selectedWork.getId(), selectedWork.getChapters().size() + 1, chapterTitle, "Chapter content here...", new Timestamp(System.currentTimeMillis()));
+            if (DBManager.addChapter(newChapter.getWorkId(), newChapter.getChapterNumber(), newChapter.getTitle(), newChapter.getContent())) {
+                selectedWork.getChapters().add(newChapter);
+                System.out.println("Chapter added successfully.");
+                updateChapterIndicator(); 
+            } else {
+                System.out.println("Failed to add chapter.");
             }
-        });
+        }
+    }
+});
 
-        Button deleteButton = new Button("Delete");
-        deleteButton.setOnAction(event -> {
+
+        Button deleteWorkButton = new Button("Delete Work");
+        deleteWorkButton.setOnAction(event -> {
             if (selectedWork != null) {
                 Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
                 alert.setTitle("Delete Confirmation");
                 alert.setHeaderText(null);
-                alert.setContentText("Are you sure you want to delete this work?");
+                alert.setContentText("Are you sure you want to delete this work? This action cannot be undone.");
+
                 Optional<ButtonType> result = alert.showAndWait();
                 if (result.isPresent() && result.get() == ButtonType.OK) {
-                    boolean success = DBManager.deleteWork(selectedWork.getTitle());
-                    if (success) {
-                        System.out.println("Work deleted successfully.");
+                    int workId = selectedWork.getId();
+                    System.out.println("Deleting work with id: " + workId);
+                    if (DBManager.deleteWork(workId)) {
                         works.remove(selectedWork);
-                        workListView.getItems().remove(selectedWork.getTitle());
-                        clearWorkDetails();
+                        workTitles.remove(selectedWork.getTitle() + (selectedWork.isDraft() ? " (Draft)" : ""));
+                        selectedWork = null;
+                        titleField.clear();
+                        contentArea.clear();
+                        selectedTags.clear();
+                        System.out.println("Work deleted successfully.");
+                        updateWorkListView(workListView, workTitles);
                     } else {
                         System.out.println("Failed to delete work.");
                     }
@@ -204,19 +219,48 @@ public class AccountManage {
             }
         });
 
+
+        Button deleteChapterButton = new Button("Delete Chapter");
+        deleteChapterButton.setOnAction(event -> {
+            if (selectedWork != null && selectedWork.getChapters().size() > 0) {
+                Chapter lastChapter = selectedWork.getChapters().get(selectedWork.getChapters().size() - 1);
+                Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                alert.setTitle("Delete Chapter Confirmation");
+                alert.setHeaderText(null);
+                alert.setContentText("Are you sure you want to delete the last chapter?");
+
+                Optional<ButtonType> result = alert.showAndWait();
+                if (result.isPresent() && result.get() == ButtonType.OK) {
+                    if (DBManager.deleteChapter(lastChapter.getId())) {
+                        selectedWork.getChapters().remove(lastChapter);
+                        System.out.println("Chapter deleted successfully.");
+                        updateChapterIndicator(); // Perbarui indikator halaman setelah menghapus chapter
+                    } else {
+                        System.out.println("Failed to delete chapter.");
+                    }
+                }
+            } else {
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setTitle("Delete Chapter Warning");
+                alert.setHeaderText(null);
+                alert.setContentText("No chapters to delete, or deletion not possible. Consider deleting the entire work.");
+                alert.showAndWait();
+            }
+        });
+
         rightPane.add(new Label("Title:"), 0, 0);
         rightPane.add(titleField, 1, 0);
-        Label contentLabel = new Label("Content:");
-        contentLabel.setMinHeight(25);
-        rightPane.add(contentLabel, 0, 1);
-        rightPane.add(contentArea, 1, 1, 2, 1); 
+        rightPane.add(new Label("Content:"), 0, 1);
+        rightPane.add(contentArea, 1, 1);
         rightPane.add(saveDraftButton, 0, 2);
         rightPane.add(publishButton, 1, 2);
         rightPane.add(addChapterButton, 0, 3);
-        rightPane.add(deleteButton, 1, 3);
+        rightPane.add(deleteWorkButton, 1, 3);
+        rightPane.add(deleteChapterButton, 0, 4); 
+        rightPane.add(chapterIndicator, 1, 5); // Tambahkan label indikator halaman di grid
 
         VBox taggingBox = createTaggingButtons();
-        rightPane.add(taggingBox, 3, 1);
+        rightPane.add(taggingBox, 2, 1); 
 
         root.setLeft(leftPane);
         root.setCenter(rightPane);
@@ -228,94 +272,103 @@ public class AccountManage {
         stage.show();
     }
 
-private void showWorkDetails(Work work) {
-    if (work != null) {
-        titleField.setText(work.getTitle());
-        contentArea.setText(work.getContent());
-        selectedTags.setAll(work.getTags().split(", "));
-    }
-}
-
-private VBox createTaggingButtons() {
-    VBox taggingBox = new VBox(10);
-
-    // Jenis Karya
-    Button jenisKaryaButton = new Button("Jenis Karya");
-    jenisKaryaButton.setMinWidth(120);
-    VBox jenisKaryaSubButtons = new VBox();
-    jenisKaryaSubButtons.setPadding(new Insets(7));
-    jenisKaryaSubButtons.setSpacing(5);
-    Button novelButton = createTagButton("Novel");
-    Button cerpenButton = createTagButton("Cerpen");
-    Button puisiButton = createTagButton("Puisi");
-    jenisKaryaButton.setOnAction(event -> toggleSubButtons(jenisKaryaSubButtons, novelButton, cerpenButton, puisiButton));
-
-    // Genre
-    Button genreButton = new Button("Genre");
-    genreButton.setMinWidth(120);
-    VBox genreSubButtons = new VBox();
-    genreSubButtons.setPadding(new Insets(5));
-    genreSubButtons.setSpacing(5);
-    Button fantasiButton = createTagButton("Fantasi");
-    Button romantisButton = createTagButton("Romantis");
-    Button misteriButton = createTagButton("Misteri");
-    Button thrillerButton = createTagButton("Thriller");
-    genreButton.setOnAction(event -> toggleSubButtons(genreSubButtons, fantasiButton, romantisButton, misteriButton, thrillerButton));
-
-    taggingBox.getChildren().addAll(jenisKaryaButton, jenisKaryaSubButtons, genreButton, genreSubButtons);
-
-    return taggingBox;
-}
-
-private Button createTagButton(String tag) {
-    Button button = new Button(tag);
-    button.setMinWidth(120);
-    button.setOnAction(event -> {
-        if (selectedTags.contains(tag)) {
-            selectedTags.remove(tag);
-            button.setStyle("");
-        } else {
-            selectedTags.add(tag);
-            button.setStyle("-fx-background-color: #87CEEB;"); 
+    private void showWorkDetails(Work work) {
+        if (work != null) {
+            titleField.setText(work.getTitle());
+            contentArea.setText(work.getContent());
+            selectedTags.setAll(work.getTags().split(", "));
+            updateChapterIndicator(); // Perbarui indikator halaman saat menampilkan detail karya
         }
-        System.out.println("Selected tags: " + selectedTags);
-    });
-    return button;
-}
-
-private void toggleSubButtons(VBox subButtons, Button... buttons) {
-    if (subButtons.getChildren().isEmpty()) {
-        subButtons.getChildren().addAll(buttons);
-    } else {
-        subButtons.getChildren().clear();
     }
-}
 
-private void updateWorkListView(ListView<String> workListView, ObservableList<String> workTitles) {
-    int selectedIndex = workListView.getSelectionModel().getSelectedIndex();
-    workTitles.set(selectedIndex, selectedWork.getTitle() + (selectedWork.isDraft() ? " (Draft)" : ""));
-}
+    private VBox createTaggingButtons() {
+        VBox taggingBox = new VBox(10);
 
-private void saveDraft(Work work) {
-    work.setUserId(currentUser.getId());
-    if (DBManager.updateWork(work)) {
-        System.out.println("Draft saved successfully.");
-    } else {
-        System.out.println("Failed to save draft.");
+        // Jenis Karya
+        Button jenisKaryaButton = new Button("Jenis Karya");
+        jenisKaryaButton.setMinWidth(120);
+        VBox jenisKaryaSubButtons = new VBox();
+        jenisKaryaSubButtons.setPadding(new Insets(7));
+        jenisKaryaSubButtons.setSpacing(5);
+        Button novelButton = createTagButton("Novel");
+        Button cerpenButton = createTagButton("Cerpen");
+        Button puisiButton = createTagButton("Puisi");
+        jenisKaryaButton.setOnAction(event -> toggleSubButtons(jenisKaryaSubButtons, novelButton, cerpenButton, puisiButton));
+
+        // Genre
+        Button genreButton = new Button("Genre");
+        genreButton.setMinWidth(120);
+        VBox genreSubButtons = new VBox();
+        genreSubButtons.setPadding(new Insets(5));
+        genreSubButtons.setSpacing(5);
+        Button fantasiButton = createTagButton("Fantasi");
+        Button romantisButton = createTagButton("Romantis");
+        Button misteriButton = createTagButton("Misteri");
+        Button thrillerButton = createTagButton("Thriller");
+        genreButton.setOnAction(event -> toggleSubButtons(genreSubButtons, fantasiButton, romantisButton, misteriButton, thrillerButton));
+
+        taggingBox.getChildren().addAll(jenisKaryaButton, jenisKaryaSubButtons, genreButton, genreSubButtons);
+
+        return taggingBox;
     }
-}
 
-private void publishWork(Work work) {
-    work.setUserId(currentUser.getId());
-    if (DBManager.updateWork(work)) {
-        System.out.println("Work published successfully.");
-    } else {
-        System.out.println("Failed to publish work.");
+    private Button createTagButton(String tag) {
+        Button button = new Button(tag);
+        button.setMinWidth(120);
+        button.setOnAction(event -> {
+            if (selectedTags.contains(tag)) {
+                selectedTags.remove(tag);
+                button.setStyle("");
+            } else {
+                selectedTags.add(tag);
+                button.setStyle("-fx-background-color: #87CEEB;"); // Contoh gaya untuk tombol yang dipilih
+            }
+            System.out.println("Selected tags: " + selectedTags);
+        });
+        return button;
     }
-}
-    private void clearWorkDetails() {
-        titleField.clear();
-        contentArea.clear();
-        selectedTags.clear();
+
+    private void toggleSubButtons(VBox subButtons, Button... buttons) {
+        if (subButtons.getChildren().isEmpty()) {
+            subButtons.getChildren().addAll(buttons);
+        } else {
+            subButtons.getChildren().clear();
+        }
+    }
+
+    private void updateWorkListView(ListView<String> workListView, ObservableList<String> workTitles) {
+        workTitles.clear();
+        for (Work work : works) {
+            workTitles.add(work.getTitle() + (work.isDraft() ? " (Draft)" : ""));
+        }
+        workListView.setItems(workTitles);
+    }
+
+    private void saveDraft(Work work) {
+        work.setUserId(currentUser.getId());
+        if (DBManager.updateWork(work)) {
+            System.out.println("Draft saved successfully.");
+        } else {
+            System.out.println("Failed to save draft.");
+        }
+    }
+
+    private void publishWork(Work work) {
+        work.setUserId(currentUser.getId());
+        if (DBManager.updateWork(work)) {
+            System.out.println("Work published successfully.");
+        } else {
+            System.out.println("Failed to publish work.");
+        }
+    }
+
+    private void updateChapterIndicator() {
+        if (selectedWork != null) {
+            int currentPage = selectedWork.getChapters().size();
+            int totalPages = selectedWork.getChapters().size();
+            chapterIndicator.setText("Chapter: " + currentPage + " / " + totalPages);
+        } else {
+            chapterIndicator.setText("No chapters available.");
+        }
     }
 }
