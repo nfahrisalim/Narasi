@@ -305,15 +305,23 @@ public class MainView extends Application {
         protected void updateItem(Work item, boolean empty) {
             super.updateItem(item, empty);
             if (item != null && !empty) {
-                title.setText("Judul: " + item.getTitle());
+                title.setText(item.getTitle());
+                title.setStyle("-fx-font-weight: bold; -fx-font-size: 16px; -fx-padding: 5px;");
+                
                 tags.setText("Tags: " + item.getTags());
+                tags.setStyle("-fx-font-size: 14px; -fx-padding: 5px; -fx-text-fill: gray;");
+                
                 preview.setText(getPreviewContent(item.getContent()));
+                preview.setStyle("-fx-font-size: 14px; -fx-padding: 5px;");
+                
                 LocalDateTime releaseDateTime = item.getTimestamp().toLocalDateTime();
                 String formattedTimestamp = releaseDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
                 timestamp.setText("Tanggal Rilis: " + formattedTimestamp);
-
-
-                setGraphic(content);
+                timestamp.setStyle("-fx-font-size: 12px; -fx-padding: 5px; -fx-text-fill: darkgray;");
+                
+                VBox contentBox = new VBox(title, tags, preview, timestamp);
+                contentBox.setStyle("-fx-padding: 10px; -fx-border-color: lightgray; -fx-border-width: 1px; -fx-border-radius: 5px; -fx-background-radius: 5px; -fx-background-color: #f9f9f9;");
+                setGraphic(contentBox);
             } else {
                 setGraphic(null);
             }
