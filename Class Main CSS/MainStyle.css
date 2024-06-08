@@ -1,0 +1,77 @@
+.root {
+    -fx-font-family: "Helvetica";
+    -fx-background-color: linear-gradient(to bottom right, #7BD5F5, #787FF6, #4ADEDE, #1CA7EC, #1F2F98); /* Gradient from light blue to dark blue */
+    -fx-base: #8576FF;
+}
+
+.button {
+    -fx-background-color: linear-gradient(to bottom, #6FDCE3, #5CC2CA);
+    -fx-text-fill: white;
+    -fx-font-family: "Helvetica";
+    -fx-font-size: 12px; /* Mengurangi ukuran font */
+    -fx-padding: 5px 10px; /* Mengurangi padding atas dan bawah menjadi 5px dan padding kiri kanan menjadi 10px */
+    -fx-border-radius: 20px; /* Mengurangi border radius */
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.3), 5, 0, 0, 2); /* Mengurangi ukuran shadow */
+    -fx-background-insets: 0,1,2,3;
+    -fx-background-radius: 20,19,18,17;
+    -fx-transition: background-color 0.3s ease, effect 0.3s ease;
+}
+
+
+.button:hover {
+    -fx-background-color: linear-gradient(to bottom, #5CC2CA, #4AA5AC);
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.5), 10, 0, 0, 7);
+}
+
+.button:pressed {
+    -fx-background-color: linear-gradient(to bottom, #4AA5AC, #3C8990);
+    -fx-effect: none;
+}
+
+.list-cell {
+    -fx-background-color: #f0f0f0;
+    -fx-padding: 15px;
+    -fx-spacing: 5px;
+    -fx-border-color: #6b6565;
+    -fx-border-width: 0 0 1 0;
+    -fx-border-style: solid;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.3), 5, 0, 0, 2);
+    -fx-cursor: hand;
+    -fx-transition : background-color 0.3s ease, effect 0.3s ease;
+}
+
+.list-cell:hover {
+    -fx-background-color: #8ae494;
+}
+
+.list-cell:selected {
+    -fx-background-color: #20dd6f;
+}
+
+#topBar, .sidebar {
+    -fx-background-color: #762577;
+}
+
+.text {
+    -fx-font-family: "Helvetica";
+    -fx-fill: #333333;
+    -fx-font-size: 14px;
+}
+
+.comment-area {
+    -fx-background-color: #F0F0F0;
+    -fx-text-fill: #333333;
+    -fx-font-family: "Helvetica";
+    -fx-font-size: 14px;
+    -fx-border-color: #CCCCCC;
+    -fx-border-width: 1px;
+    -fx-border-radius: 5px;
+    -fx-padding: 10px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.3), 5, 0, 0, 2);
+}
+
+.comment-area:hover {
+    -fx-background-color: #E0E0E0;
+}
+
