@@ -127,8 +127,7 @@ public class Work {
 
     public void addChapter(int workId, int number, String title, String content) {
         int chapterId = this.chapters.size() + 1; 
-        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-        this.chapters.add(new Chapter(workId, number, chapterId, title, content, timestamp));
+        this.chapters.add(new Chapter(workId, number, chapterId, title, content));
     }
 
     public Timestamp getTimestamp() {

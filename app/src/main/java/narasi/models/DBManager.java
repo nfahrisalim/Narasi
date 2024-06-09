@@ -116,6 +116,22 @@ public class DBManager {
         }
     }
 
+    public static boolean addChapter(Chapter chapter) {
+        String sql = "INSERT INTO chapters (work_id, number, title, content) VALUES (?, ?, ?, ?)";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, chapter.getWorkId());
+            pstmt.setInt(2, chapter.getNumber());
+            pstmt.setString(3, chapter.getTitle());
+            pstmt.setString(4, chapter.getContent());
+            pstmt.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            return false;
+        }
+    }
+
     public static List<Comment> getCommentsByWorkId(int workId) {
         String sql = "SELECT * FROM comments WHERE work_id = ?";
         List<Comment> comments = new ArrayList<>();
@@ -447,6 +463,20 @@ public static boolean updateWork(Work work) {
         }
     }
 
+    public static void saveChapter(Chapter chapter) {
+        String query = "UPDATE chapters SET title = ?, content = ? WHERE id = ?";
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setString(1, chapter.getTitle());
+            statement.setString(2, chapter.getContent());
+            statement.setInt(3, chapter.getId());
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }    
+    
+
     public static boolean deleteWork(int workId) {
         String query = "DELETE FROM works WHERE id = ?";
         Connection connection = null;
@@ -533,7 +563,7 @@ public static boolean updateWork(Work work) {
 
     public static List<Chapter> getChaptersByWorkId(int workId) {
         List<Chapter> chapters = new ArrayList<>();
-        String query = "SELECT * FROM chapters WHERE work_id = ? ORDER BY chapter_number ASC";
+        String query = "SELECT * FROM chapters WHERE work_id = ? ORDER BY number ASC";
         try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setInt(1, workId);
@@ -542,10 +572,9 @@ public static boolean updateWork(Work work) {
                     Chapter chapter = new Chapter(
                         resultSet.getInt("id"),
                         resultSet.getInt("work_id"),
-                        resultSet.getInt("chapter_number"),
+                        resultSet.getInt("number"), 
                         resultSet.getString("title"),
-                        resultSet.getString("content"),
-                        resultSet.getTimestamp("timestamp")
+                        resultSet.getString("content")
                     );
                     chapters.add(chapter);
                 }
@@ -555,7 +584,7 @@ public static boolean updateWork(Work work) {
         }
         return chapters;
     }
-
+    
     public static Chapter getChapterById(int chapterId) {
         String query = "SELECT * FROM chapters WHERE id = ?";
         try (Connection connection = DatabaseConnection.getConnection();
@@ -568,8 +597,7 @@ public static boolean updateWork(Work work) {
                         resultSet.getInt("work_id"),
                         resultSet.getInt("chapter_number"),
                         resultSet.getString("title"),
-                        resultSet.getString("content"),
-                        resultSet.getTimestamp("timestamp")
+                        resultSet.getString("content")
                     );
                 }
             }
@@ -579,20 +607,19 @@ public static boolean updateWork(Work work) {
         return null;
     }
 
-    public static boolean updateChapter(int chapterId, String title, String content) {
+    public static void updateChapter(Chapter chapter) {
         String query = "UPDATE chapters SET title = ?, content = ? WHERE id = ?";
         try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(query)) {
-            statement.setString(1, title);
-            statement.setString(2, content);
-            statement.setInt(3, chapterId);
-            int rowsUpdated = statement.executeUpdate();
-            return rowsUpdated > 0;
+            statement.setString(1, chapter.getTitle());
+            statement.setString(2, chapter.getContent());
+            statement.setInt(3, chapter.getId());
+            statement.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
-            return false;
         }
     }
+    
     
     public static boolean deleteChapter(int chapterId) {
         String query = "DELETE FROM chapters WHERE id = ?";

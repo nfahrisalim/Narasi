@@ -27,3 +27,4 @@ public class RegisteredUser extends User {
     public void manageWork(Work work) {
     }
 }
+

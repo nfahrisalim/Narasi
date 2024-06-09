@@ -34,11 +34,7 @@ public class MainView extends Application {
     public void start(Stage primaryStage) {
         this.primaryStage = primaryStage; 
         primaryStage.setTitle("Narasi - Platform Karya Tulis Mahasiswa");
-
-
         root = new BorderPane();
-
-
         topBar = new HBox();
         topBar.setPadding(new Insets(20));
         topBar.setSpacing(15);
@@ -174,8 +170,8 @@ public class MainView extends Application {
         });
 
 
-        sidebar.getChildren().addAll(jenisKaryaButton, createScrollPane(jenisKaryaSubButtons),
-                genreButton, createScrollPane(genreSubButtons));
+        sidebar.getChildren().addAll(jenisKaryaButton,(jenisKaryaSubButtons),
+                genreButton, (genreSubButtons));
 
 
         ScrollPane contentScrollPane = new ScrollPane();
@@ -242,13 +238,6 @@ public class MainView extends Application {
     }
 
 
-    private ScrollPane createScrollPane(VBox content) {
-        ScrollPane scrollPane = new ScrollPane();
-        scrollPane.setContent(content);
-        scrollPane.setFitToWidth(true);
-        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        return scrollPane;
-    }
 
 
     public void setCurrentUser(User user) {

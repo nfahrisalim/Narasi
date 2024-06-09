@@ -1,25 +1,20 @@
 package narasi.models;
 
-import java.sql.Timestamp;
-
 public class Chapter {
     private int id;
     private int workId;
-    private int chapterNumber;
+    private int Number;
     private String title;
     private String content;
-    private Timestamp timestamp;
 
-    public Chapter(int id, int workId, int chapterNumber, String title, String content, Timestamp timestamp) {
+
+    public Chapter(int id, int workId, int Number, String title, String content) {
         this.id = id;
         this.workId = workId;
-        this.chapterNumber = chapterNumber;
+        this.Number = Number;
         this.title = title;
         this.content = content;
-        this.timestamp = timestamp;
     }
-
-    // Getters dan Setters
 
     public int getId() {
         return id;
@@ -37,12 +32,12 @@ public class Chapter {
         this.workId = workId;
     }
 
-    public int getChapterNumber() {
-        return chapterNumber;
+    public int getNumber() {
+        return Number;
     }
 
-    public void setChapterNumber(int chapterNumber) {
-        this.chapterNumber = chapterNumber;
+    public void setNumber(int Number) {
+        this.Number = Number;
     }
 
     public String getTitle() {
@@ -59,13 +54,5 @@ public class Chapter {
 
     public void setContent(String content) {
         this.content = content;
-    }
-
-    public Timestamp getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(Timestamp timestamp) {
-        this.timestamp = timestamp;
     }
 }
