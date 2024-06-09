@@ -91,8 +91,8 @@ public class ReadingView {
 
         closeButton.setOnAction(event -> {
             primaryStage.close();
-            mainView.start(new Stage());
         });
+        
 
 
 
