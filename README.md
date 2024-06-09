@@ -73,7 +73,51 @@ B. User
 ## Link Repository GitHub
 [https://github.com/DissenPhase/Narasi](https://github.com/DissentPhase/Narasi)
 
+## Screenshots
+### *1 MAIN THEME*
+![1 MAIN THEME](https://github.com/DissentPhase/Narasi/blob/main/README/1%20MAIN%20THEME.png)
 
+### *2 READING VIEW*
+![2 READING VIEW](https://github.com/DissentPhase/Narasi/blob/main/README/2%20READING%20VIEW.png)
+
+### *3 COMMENT SCENE*
+![3 COMMENT SCENE](https://github.com/DissentPhase/Narasi/blob/main/README/4%20COMMENT%20VIEW.png)
+
+### *4 LOGIN VIEW*
+![4 LOGIN VIEW](https://github.com/DissentPhase/Narasi/blob/main/README/5%20LOGIN%20VIEW.png)
+
+### *5 REGISTER VIEW*
+![5 REGISTER VIEW](https://github.com/DissentPhase/Narasi/blob/main/README/6%20REGISTER%20VIEW.png)
+
+### *6 PUBLISH VIEW*
+![6 PUBLISH VIEW](https://github.com/DissentPhase/Narasi/blob/main/README/7%20PUBLISH%20VIEW.png)
+
+### *7 ADD CHAPTER*
+![7 ADD CHAPTER](https://github.com/DissentPhase/Narasi/blob/main/README/7%20ADD%20CHAPTER.png)
+
+### *8 INVALID EMAIL-ALERT*
+![8 INVALID EMAIL-ALERT](https://github.com/DissentPhase/Narasi/blob/main/README/8%20INVALID-EMAIL%20ALERT.png)
+
+### *9 INVALID PASS-ALERT*
+![9 INVALID PASS-ALERT](https://github.com/DissentPhase/Narasi/blob/main/README/9%20INVALID-PASSWORD%20ALERT.png)
+
+### *10 REGIST-SUCCS ALERT*
+![10 REGIST-SUCCS ALERT](https://github.com/DissentPhase/Narasi/blob/main/README/10%20REGIST-SUCCS%20ALERT.png)
+
+### *11 DELETE ALERT*
+![11 DELETE ALERT](https://github.com/DissentPhase/Narasi/blob/main/README/11%20DELETE%20ALERT.png)
+
+### *12 LOGOUT-ACC ALERT*
+![12 LOGOUT-ACC ALERT](https://github.com/DissentPhase/Narasi/blob/main/README/12%20LOG-OUT%20ACC%20ALERT.png)
+
+### *13 PUBLISH-ERROR WARNING*
+![13 PUBLISH-ERROR WARNING](https://github.com/DissentPhase/Narasi/blob/main/README/13%20PUBLISH-ERROR%20WARNING.png)
+
+
+
+## Pengujian Pada Aplikasi
+![Table1](https://github.com/CSE-9124/TravelReview-project/blob/main/readme/Table1.png)
+![Table2](https://github.com/CSE-9124/TravelReview-project/blob/main/readme/Table2.png)
 
 
 
