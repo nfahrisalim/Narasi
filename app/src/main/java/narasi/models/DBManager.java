@@ -192,50 +192,26 @@ public class DBManager {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        // Jika tidak ada bab sebelumnya, kembalikan 1
         return 1;
     }
 
     public static boolean addWork(Work work) {
-        String sql = "INSERT INTO works (title, content, tags, isDraft, user_id) VALUES (?, ?, ?, ?, ?)";
-
-        try (Connection connection = DatabaseConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            statement.setString(1, work.getTitle());
-            statement.setString(2, work.getContent());
-            statement.setString(3, work.getTags());
-            statement.setBoolean(4, work.isDraft());
-
-            if (work.getUserId() == 0) {
-                System.out.println("User ID in Work object is 0. Retrieving userID from database...");
-                RegisteredUser currentUser = (RegisteredUser) getCurrentUser();
-                if (currentUser != null) {
-                    work.setUserId(currentUser.getId());
-                    System.out.println("User ID set to: " + currentUser.getId());
-                } else {
-                    System.out.println("Failed to retrieve current user ID from database.");
-                    return false;
-                }
-            }
-        
-        
-        statement.setInt(5, work.getUserId());
-        statement.executeUpdate();
-        
-        try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
-            if (generatedKeys.next()) {
-                work.setId(generatedKeys.getInt(1));
-            } else {
-                System.out.println("Failed to retrieve generated key for new work.");
-                return false;
-            }
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(
+                "INSERT INTO works (title, content, isDraft, user_Id, pageMarker) VALUES (?, ?, ?, ?, ?)")) {
+            pstmt.setString(1, work.getTitle());
+            pstmt.setString(2, work.getContent());
+            pstmt.setBoolean(3, work.isDraft());
+            pstmt.setInt(4, work.getUserId());
+            pstmt.setInt(5, work.getPageMarker()); 
+            pstmt.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            return false;
         }
-        return true;
-    } catch (SQLException e) {
-        e.printStackTrace();
-        return false;
     }
-}
+        
 
     public static RegisteredUser getCurrentRegisteredUser() {
         User user = getCurrentUser();
@@ -289,29 +265,29 @@ public class DBManager {
         Connection connection = null;
         PreparedStatement statement = null;
         ResultSet resultSet = null;
-
+    
         try {
             connection = DatabaseConnection.getConnection();
-            String sql = "SELECT works.id, works.title, works.content, works.tags, works.kudosCount, works.user_id, users.fullName, works.isDraft, works.timestamp " +
+            String sql = "SELECT works.id, works.title, works.content, works.pageMarker, works.tags, works.kudosCount, works.user_id, users.fullName, works.isDraft, works.timestamp " +
                          "FROM works " +
                          "INNER JOIN users ON works.user_id = users.id " +
                          "WHERE works.isDraft = 0 " +
                          "ORDER BY works.timestamp DESC";
             statement = connection.prepareStatement(sql);
             resultSet = statement.executeQuery();
-
+    
             while (resultSet.next()) {
                 int id = resultSet.getInt("id");
                 String title = resultSet.getString("title");
                 String content = resultSet.getString("content");
+                int pageMarker = resultSet.getInt("pageMarker");
                 String tags = resultSet.getString("tags");
                 int kudosCount = resultSet.getInt("kudosCount");
                 int userId = resultSet.getInt("user_id");
-                String authorFullName = resultSet.getString("fullName");
                 boolean isDraft = resultSet.getBoolean("isDraft");
                 Timestamp timestamp = resultSet.getTimestamp("timestamp");
-
-                Work work = new Work(id, title, content, tags, kudosCount, userId, authorFullName, isDraft, timestamp);
+    
+                Work work = new Work(id, title, content, pageMarker, tags, kudosCount, userId, resultSet.getString("fullName"), isDraft, timestamp);
                 works.add(work);
             }
         } catch (SQLException e) {
@@ -325,11 +301,8 @@ public class DBManager {
                 e.printStackTrace();
             }
         }
-
         return works;
     }
-
-
 
     public static List<Work> searchWorksByTitle(String title) {
         List<Work> works = new ArrayList<>();
@@ -411,25 +384,92 @@ public class DBManager {
         }
     }
 
-   public static boolean publishWork(Work work) {
-    String query = "INSERT INTO works (title, content, tags, isDraft, user_id) VALUES (?, ?, ?, ?, ?)";
-    try (Connection connection = DatabaseConnection.getConnection();
-         PreparedStatement statement = connection.prepareStatement(query)) {
-        statement.setString(1, work.getTitle());
-        statement.setString(2, work.getContent());
-        statement.setString(3, work.getTags());
-        statement.setBoolean(4, false); // Set isDraft ke false saat dipublikasikan
-        statement.setInt(5, work.getUserId());
-        int rowsInserted = statement.executeUpdate();
-        return rowsInserted > 0;
-    } catch (SQLException e) {
-        e.printStackTrace();
-        return false;
+    public static List<String> getTagsByWorkId(int workId) {
+        List<String> tags = new ArrayList<>();
+        Connection connection = null;
+        PreparedStatement statement = null;
+        ResultSet resultSet = null;
+
+        try {
+            connection = DatabaseConnection.getConnection();
+            String query = "SELECT tags FROM works WHERE id = ?";
+            statement = connection.prepareStatement(query);
+            statement.setInt(1, workId);
+            resultSet = statement.executeQuery();
+
+            while (resultSet.next()) {
+                String tag = resultSet.getString("tag");
+                tags.add(tag);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            // Tutup koneksi, statement, dan resultSet
+            try {
+                if (resultSet != null) resultSet.close();
+                if (statement != null) statement.close();
+                if (connection != null) connection.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        return tags;
     }
-}
+
+
+    public static boolean publishWork(Work work, int nextPageMarker) {
+        Connection conn = null;
+        PreparedStatement preparedStatement = null;
+        boolean success = false;
+        
+        try {
+            conn = DatabaseConnection.getConnection();
+            String query = "INSERT INTO works (title, content, tags, isDraft, user_Id, pageMarker) VALUES (?, ?, ?, ?, ?, ?)";
+            preparedStatement = conn.prepareStatement(query);
+            preparedStatement.setString(1, work.getTitle());
+            preparedStatement.setString(2, work.getContent());
+            preparedStatement.setString(3, work.getTags());
+            preparedStatement.setBoolean(4, work.isDraft());
+            preparedStatement.setInt(5, work.getUserId());
+            preparedStatement.setInt(6, nextPageMarker);
+            preparedStatement.executeUpdate();
+            success = true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (preparedStatement != null) preparedStatement.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        
+        return success;
+    }
+    
+    
    
 
-public static boolean updateWork(Work work) {
+    public static boolean updateWork(Work work) {
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(
+                "UPDATE works SET title = ?, content = ?, isDraft = ?, tags = ?, pageMarker = ? WHERE id = ?")) {
+            pstmt.setString(1, work.getTitle());
+            pstmt.setString(2, work.getContent());
+            pstmt.setBoolean(3, work.isDraft());
+            pstmt.setString(4, work.getTags());
+            pstmt.setInt(5, work.getPageMarker()); 
+            pstmt.setInt(6, work.getId());
+            pstmt.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            return false;
+        }
+    }
+
+public static boolean saveWork(Work work) {
     String query = "UPDATE works SET title = ?, content = ?, tags = ?, isDraft = ? WHERE id = ?";
     try (Connection connection = DatabaseConnection.getConnection();
          PreparedStatement statement = connection.prepareStatement(query)) {
@@ -482,42 +522,110 @@ public static boolean updateWork(Work work) {
         Connection connection = null;
         try {
             connection = DatabaseConnection.getConnection();
-            connection.setAutoCommit(false); // Nonaktifkan auto-commit untuk mengelola transaksi secara manual
+            connection.setAutoCommit(false);
 
             try (PreparedStatement statement = connection.prepareStatement(query)) {
                 statement.setInt(1, workId);
-                System.out.println("Executing delete statement...");
                 int rowsAffected = statement.executeUpdate();
-                System.out.println("Rows affected: " + rowsAffected);
                 if (rowsAffected > 0) {
-                    connection.commit(); // Commit perubahan
-                    System.out.println("Work with id " + workId + " deleted successfully.");
+                    connection.commit();
                     return true;
-                } else {
-                    System.out.println("No work found with id " + workId + ".");
                 }
             }
         } catch (SQLException e) {
-            System.err.println("SQL error when deleting work with id " + workId + ": " + e.getMessage());
             if (connection != null) {
                 try {
-                    connection.rollback(); // Rollback jika terjadi kesalahan
-                    System.out.println("Rolled back changes due to error.");
+                    connection.rollback();
                 } catch (SQLException rollbackEx) {
-                    System.err.println("Error during rollback: " + rollbackEx.getMessage());
+                    rollbackEx.printStackTrace();
                 }
             }
+            e.printStackTrace();
         } finally {
             if (connection != null) {
                 try {
-                    connection.setAutoCommit(true); // Aktifkan kembali auto-commit
+                    connection.setAutoCommit(true);
                     connection.close();
                 } catch (SQLException closeEx) {
-                    System.err.println("Error when closing connection: " + closeEx.getMessage());
+                    closeEx.printStackTrace();
                 }
             }
         }
         return false;
+    }
+
+    public static Chapter getChapterByPageMarker(int workId, int pageMarker) {
+        Chapter chapter = null;
+        String query = "SELECT * FROM chapters WHERE work_id = ? AND page_marker = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setInt(1, workId);
+            stmt.setInt(2, pageMarker);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    int id = rs.getInt("id");
+                    String title = rs.getString("title");
+                    String content = rs.getString("content");
+                    chapter = new Chapter(id, workId, pageMarker, title, content);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return chapter;
+    }
+
+    public static int getNextPageMarker(String title) {
+        Connection conn = null;
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+        int nextPageMarker = 0;
+        
+        try {
+            conn = DatabaseConnection.getConnection();
+            String query = "SELECT MAX(pageMarker) FROM works WHERE title = ?";
+            preparedStatement = conn.prepareStatement(query);
+            preparedStatement.setString(1, title);
+            resultSet = preparedStatement.executeQuery();
+            
+            if (resultSet.next()) {
+                nextPageMarker = resultSet.getInt(1) + 1;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (resultSet != null) resultSet.close();
+                if (preparedStatement != null) preparedStatement.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        
+        return nextPageMarker;
+    }
+        
+
+
+    public static Connection getConnection() throws SQLException {
+        return DatabaseConnection.getConnection();
+    }
+    public static int getTotalPages(String title) {
+        int totalPages = 0;
+        String query = "SELECT MAX(pageMarker) FROM works WHERE title = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, title);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    totalPages = rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return totalPages;
     }
 
     
@@ -590,16 +698,15 @@ public static boolean updateWork(Work work) {
         try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setInt(1, chapterId);
-            try (ResultSet resultSet = statement.executeQuery()) {
-                if (resultSet.next()) {
-                    return new Chapter(
-                        resultSet.getInt("id"),
-                        resultSet.getInt("work_id"),
-                        resultSet.getInt("chapter_number"),
-                        resultSet.getString("title"),
-                        resultSet.getString("content")
-                    );
-                }
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return new Chapter(
+                    resultSet.getInt("id"),
+                    resultSet.getInt("work_id"),
+                    resultSet.getInt("number"),
+                    resultSet.getString("title"),
+                    resultSet.getString("content")
+                );
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -607,18 +714,22 @@ public static boolean updateWork(Work work) {
         return null;
     }
 
-    public static void updateChapter(Chapter chapter) {
-        String query = "UPDATE chapters SET title = ?, content = ? WHERE id = ?";
+    public static boolean updateChapter(Chapter chapter) {
+        String query = "UPDATE chapters SET content = ?, title = ? WHERE id = ?";
         try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(query)) {
-            statement.setString(1, chapter.getTitle());
-            statement.setString(2, chapter.getContent());
+            statement.setString(1, chapter.getContent());
+            statement.setString(2, chapter.getTitle());
             statement.setInt(3, chapter.getId());
-            statement.executeUpdate();
+            int rowsUpdated = statement.executeUpdate();
+            return rowsUpdated > 0;
         } catch (SQLException e) {
             e.printStackTrace();
+            return false;
         }
     }
+
+
     
     
     public static boolean deleteChapter(int chapterId) {
@@ -632,6 +743,27 @@ public static boolean updateWork(Work work) {
             e.printStackTrace();
             return false;
         }
+    }
+
+    public static Chapter getFirstChapterByWorkId(int workId) {
+        String query = "SELECT * FROM chapters WHERE work_id = ? ORDER BY number LIMIT 1";
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, workId);
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return new Chapter(
+                    resultSet.getInt("id"),
+                    resultSet.getInt("work_id"),
+                    resultSet.getInt("number"),
+                    resultSet.getString("title"),
+                    resultSet.getString("content")
+                );
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public static boolean registerUser(String username, String password, String fullName, String email) {
@@ -648,6 +780,22 @@ public static boolean updateWork(Work work) {
             e.printStackTrace();
             return false;
         }
+    }
+
+    public static List<String> getAllTags() {
+        List<String> tags = new ArrayList<>();
+        String query = "SELECT name FROM tags";
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query);
+             ResultSet resultSet = statement.executeQuery()) {
+
+            while (resultSet.next()) {
+                tags.add(resultSet.getString("name"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return tags;
     }
 
     public static List<Work> getWorksByCurrentUser(int userId) {

@@ -13,6 +13,8 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Collections;
+
 
 public class AccountManage {
 
@@ -36,29 +38,29 @@ public class AccountManage {
     }
 
     public void showManage() {
-    stage.setTitle("Manage dan Publish Content");
-
-    BorderPane root = new BorderPane();
-
-    ListView<String> workListView = new ListView<>();
-    ObservableList<String> workTitles = FXCollections.observableArrayList();
-    for (Work work : works) {
-        workTitles.add(work.getTitle() + (work.isDraft() ? " (Draft)" : ""));
-    }
-    chapterNavigation = new ComboBox<>();
-    workListView.setItems(workTitles);
-    workListView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-        int selectedIndex = workListView.getSelectionModel().getSelectedIndex();
-        if (selectedIndex >= 0 && selectedIndex < works.size()) {
-            selectedWork = works.get(selectedIndex);
-            selectedWork.setChapters(DBManager.getChaptersByWorkId(selectedWork.getId()));
-            System.out.println("Selected work chapters: " + selectedWork.getChapters().size());
-            showWorkDetails(selectedWork);
-            refreshChapterNavigation();
-            System.out.println("Selected work: " + (selectedWork != null ? selectedWork.getTitle() : "None"));
+        stage.setTitle("Manage dan Publish Content");
+        BorderPane root = new BorderPane();
+        ListView<String> workListView = new ListView<>();
+        ObservableList<String> workTitles = FXCollections.observableArrayList();
+        for (Work work : works) {
+            workTitles.add(work.getTitle() + (work.isDraft() ? " (Draft)" : ""));
         }
-    });
-        
+        chapterNavigation = new ComboBox<>();
+        workListView.setItems(workTitles);
+        workListView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            int selectedIndex = workListView.getSelectionModel().getSelectedIndex();
+            if (selectedIndex >= 0 && selectedIndex < works.size()) {
+                selectedWork = works.get(selectedIndex);
+                System.out.println("Selected work: " + (selectedWork != null ? selectedWork.getTitle() : "None"));
+                if (selectedWork.getPageMarker() >= 2) {
+                    titleField.setEditable(false);
+                } else {
+                    titleField.setEditable(true);
+                }
+                showWorkDetails(selectedWork);
+                refreshChapterNavigation(selectedWork);
+            }
+        });
        
         VBox leftPane = new VBox(10);
         leftPane.setPadding(new Insets(10));
@@ -101,206 +103,187 @@ public class AccountManage {
         updateChapterIndicator(); 
         chapterIndicator = new Label();
         chapterNavigation.setOnAction(event -> {
-            if (selectedWork != null) {
-                int selectedIndex = chapterNavigation.getSelectionModel().getSelectedIndex();
+            Integer selectedPageMarker = chapterNavigation.getValue(); 
+        
+            if (selectedWork != null && selectedPageMarker != null) { 
+                saveChapter();
+                int selectedIndex = selectedPageMarker.intValue(); 
                 System.out.println("Selected chapter index: " + selectedIndex);
-                System.out.println("Total chapters: " + selectedWork.getChapters().size());
-    
-                if (selectedIndex == 0) {
-                    // Handle the case for the main work content
+        
+                if (selectedIndex == 0 || selectedWork.getPageMarker() < 2) {
+              
                     titleField.setText(selectedWork.getTitle());
                     contentArea.setText(selectedWork.getContent());
-                } else if (selectedIndex > 0) {
-                    int chapterIndex = selectedIndex - 1; // Adjust index for chapter
-                    if (chapterIndex < selectedWork.getChapters().size()) {
-                        Chapter chapter = selectedWork.getChapters().get(chapterIndex);
-                        if (chapter != null) {
-                            titleField.setText(chapter.getTitle());
-                            contentArea.setText(chapter.getContent());
-                        } else {
-                            System.out.println("Chapter not found.");
-                        }
-                    } else {
-                        System.out.println("Invalid chapter index: " + chapterIndex);
-                    }
                 } else {
-                    System.out.println("Invalid chapter selection.");
+                    int targetPageMarker = selectedIndex; 
+                    Work selectedChapter = works.stream()
+                            .filter(work -> work.getTitle().equals(selectedWork.getTitle()) && work.getPageMarker() == targetPageMarker)
+                            .findFirst()
+                            .orElse(null);
+                    if (selectedChapter != null) {
+                        titleField.setText(selectedChapter.getTitle());
+                        contentArea.setText(selectedChapter.getContent());
+                    } else {
+                        System.out.println("Invalid chapter selection.");
+                    }
                 }
             }
-        });
+        }); 
         
+
         Button saveDraftButton = new Button("Save Draft");
         saveDraftButton.setOnAction(event -> {
-            if (selectedWork != null) {
-                int selectedIndex = chapterNavigation.getSelectionModel().getSelectedIndex();
-                if (selectedIndex == 0) {
+            if (!titleField.getText().isEmpty() && !contentArea.getText().isEmpty()) {
+                saveChapter();
+                if (selectedWork != null) {
                     selectedWork.setTitle(titleField.getText());
                     selectedWork.setContent(contentArea.getText());
-                    selectedWork.setTags(String.join(", ", selectedTags));
                     selectedWork.setDraft(true);
-                    saveDraft(selectedWork);
-                } else if (selectedIndex > 0) {
-                    Chapter currentChapter = selectedWork.getChapters().get(selectedIndex - 1); // Adjust index for chapter
-                    currentChapter.setTitle(titleField.getText());
-                    currentChapter.setContent(contentArea.getText());
-                    DBManager.saveChapter(currentChapter);
-                }
-                updateWorkListView(workListView, workTitles);
-            } else {
-                if (!titleField.getText().isEmpty() && !contentArea.getText().isEmpty()) {
+                    DBManager.updateWork(selectedWork);
+                } else {
                     Work newWork = new Work();
                     newWork.setTitle(titleField.getText());
                     newWork.setContent(contentArea.getText());
                     newWork.setDraft(true);
                     newWork.setUserId(currentUser.getId());
+                    newWork.setPageMarker(1); 
                     boolean success = DBManager.addWork(newWork);
                     if (success) {
-                        System.out.println("New work created and draft saved successfully.");
                         works.add(newWork);
                         workListView.getItems().add(newWork.getTitle() + " (Draft)");
-                    } else {
-                        System.out.println("Failed to create new work and save draft.");
                     }
-                } else {
-                    System.out.println("Title and content cannot be empty.");
                 }
+                updateWorkListView(workListView, workTitles);
+            } else {
+                System.out.println("Title and content cannot be empty.");
             }
         });
         
-Button publishButton = new Button("Publish");
-publishButton.setOnAction(event -> {
-    if (selectedWork != null) {
-        int selectedIndex = chapterNavigation.getSelectionModel().getSelectedIndex();
-        if (selectedIndex == 0) {
-            selectedWork.setTitle(titleField.getText());
-            selectedWork.setContent(contentArea.getText());
-            selectedWork.setTags(String.join(", ", selectedTags));
-            selectedWork.setDraft(false); 
-            boolean success = DBManager.updateWork(selectedWork);
-            if (success) {
-                System.out.println("Work published successfully.");
+        
+        Button publishButton = new Button("Publish");
+        publishButton.setOnAction(event -> {
+            if (!titleField.getText().isEmpty() && !contentArea.getText().isEmpty() && !selectedTags.isEmpty()) {
+                saveChapter();
+                if (selectedWork != null) {
+                    if (selectedWork.getPageMarker() >= 2) {
+                        Work mainWork = works.stream()
+                                .filter(work -> work.getTitle().equals(selectedWork.getTitle()) && work.getPageMarker() == 1)
+                                .findFirst()
+                                .orElse(null);
+                        if (mainWork != null) {
+                            Work updatedWork = new Work();
+                            updatedWork.setId(selectedWork.getId());
+                            updatedWork.setTitle(selectedWork.getTitle());
+                            updatedWork.setContent(contentArea.getText());
+                            updatedWork.setTags(String.join(", ", selectedTags));
+                            DBManager.updateWork(selectedWork);
+                            updatedWork.setDraft(false);
+                            updatedWork.setPageMarker(selectedWork.getPageMarker());
+                            updatedWork.setUserId(currentUser.getId());
+        
+                            boolean success = DBManager.updateWork(updatedWork);
+                            if (success) {
+                                System.out.println("Chapter published successfully.");
+                            } else {
+                                System.out.println("Failed to publish chapter.");
+                            }
+                        } else {
+                            System.out.println("Main work not found.");
+                        }
+                    } else {
+                        Work updatedWork = new Work();
+                        updatedWork.setId(selectedWork.getId());
+                        updatedWork.setTitle(titleField.getText());
+                        updatedWork.setContent(contentArea.getText());
+                        updatedWork.setTags(String.join(", ", selectedTags));
+                        updatedWork.setDraft(false);
+                        updatedWork.setPageMarker(selectedWork.getPageMarker());
+                        updatedWork.setUserId(currentUser.getId());
+        
+                        boolean success = DBManager.updateWork(updatedWork);
+                        if (success) {
+                            System.out.println("Work published successfully.");
+                        } else {
+                            System.out.println("Failed to publish work.");
+                        }
+                    }
+                } else {
+                    Work newWork = new Work();
+                    newWork.setTitle(titleField.getText());
+                    newWork.setContent(contentArea.getText());
+                    newWork.setTags(String.join(", ", selectedTags));
+                    newWork.setDraft(false);
+                    newWork.setPageMarker(1);
+                    newWork.setUserId(currentUser.getId());
+        
+                    boolean success = DBManager.addWork(newWork);
+                    if (success) {
+                        System.out.println("New work created and published successfully.");
+                        works.add(newWork);
+                        workListView.getItems().add(newWork.getTitle());
+                    } else {
+                        System.out.println("Failed to create and publish new work.");
+                    }
+                }
+                updateWorkListView(workListView, workTitles);
             } else {
-                System.out.println("Failed to publish work.");
+                System.out.println("Title, content, and tags cannot be empty.");
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setTitle("Publish Warning");
+                alert.setHeaderText(null);
+                alert.setContentText("Please fill in the title, content, and tags before publishing.");
+                alert.showAndWait();
             }
-        } else {
-            Chapter currentChapter = selectedWork.getChapters().get(selectedIndex + 1);
-            currentChapter.setTitle(titleField.getText());
-            currentChapter.setContent(contentArea.getText());
-            DBManager.saveChapter(currentChapter);
-        }
-        updateWorkListView(workListView, workTitles);
-    } else {
-        if (!titleField.getText().isEmpty() && !contentArea.getText().isEmpty() && !selectedTags.isEmpty()) {
-            Work newWork = new Work();
-            newWork.setTitle(titleField.getText());
-            newWork.setContent(contentArea.getText());
-            newWork.setTags(String.join(", ", selectedTags));
-            newWork.setDraft(false); 
-            newWork.setUserId(currentUser.getId());
-            boolean success = DBManager.publishWork(newWork);
-            if (success) {
-                System.out.println("New work created and published successfully.");
-                works.add(newWork);
-                workListView.getItems().add(newWork.getTitle());
+        });
+        
+
+        Button addChapterButton = new Button("Add Chapter");
+        addChapterButton.setOnAction(event -> {
+            if (selectedWork != null) {
+                saveChapter();
+                
+                int newPageMarker = selectedWork.getPageMarker() + 1;
+                Work newChapter = new Work();
+                newChapter.setTitle(selectedWork.getTitle());
+                newChapter.setPageMarker(newPageMarker);
+                newChapter.setUserId(currentUser.getId());
+                newChapter.setDraft(true);
+        
+                boolean success = DBManager.addWork(newChapter);
+                if (success) {
+                    works.add(newChapter);
+                    refreshChapterNavigation(selectedWork);
+                    System.out.println("New chapter added successfully.");
+                } else {
+                    System.out.println("Failed to add new chapter.");
+                }
             } else {
-                System.out.println("Failed to create and publish new work.");
+                System.out.println("No work selected.");
             }
-        } else {
-            System.out.println("Title, content, and tags cannot be empty.");
-            Alert alert = new Alert(Alert.AlertType.WARNING);
-            alert.setTitle("Publish Warning");
-            alert.setHeaderText(null);
-            alert.setContentText("Please ensure title, content, and tags are filled in before publishing.");
-            alert.showAndWait();
-        }
-    }
-});
+        });
+        
 
-Button addChapterButton = new Button("Add Chapter");
-addChapterButton.setOnAction(event -> {
-    if (selectedWork != null) {
-        TextInputDialog dialog = new TextInputDialog();
-        dialog.setTitle("Add Chapter");
-        dialog.setHeaderText("Create a new chapter");
-        dialog.setContentText("Please enter the chapter title:");
-
-        Optional<String> result = dialog.showAndWait();
-        if (result.isPresent()) {
-            String chapterTitle = result.get();
-            int nextChapterNumber = selectedWork.getChapters().size() + 2; // Adjust for chapter number
-            Chapter newChapter = new Chapter(0, selectedWork.getId(), nextChapterNumber, chapterTitle, "");
-            if (DBManager.addChapter(newChapter)) {
-                selectedWork.getChapters().add(newChapter);
-                refreshChapterNavigation();
-                System.out.println("Chapter added successfully.");
-            } else {
-                System.out.println("Failed to add chapter.");
-            }
-        }
-    }
-});
-
-        Button deleteWorkButton = new Button("Delete Work");
-        deleteWorkButton.setOnAction(event -> {
+        Button deleteButton = new Button("Delete");
+        deleteButton.setOnAction(event -> {
             if (selectedWork != null) {
                 Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
                 alert.setTitle("Delete Confirmation");
                 alert.setHeaderText(null);
-                alert.setContentText("Are you sure you want to delete this work? This action cannot be undone.");
+                alert.setContentText("Are you sure you want to delete this work?");
 
                 Optional<ButtonType> result = alert.showAndWait();
                 if (result.isPresent() && result.get() == ButtonType.OK) {
-                    int workId = selectedWork.getId();
-                    System.out.println("Deleting work with id: " + workId);
-                    if (DBManager.deleteWork(workId)) {
-                        works.remove(selectedWork);
-                        workTitles.remove(selectedWork.getTitle() + (selectedWork.isDraft() ? " (Draft)" : ""));
-                        selectedWork = null;
-                        titleField.clear();
-                        contentArea.clear();
-                        selectedTags.clear();
-                        System.out.println("Work deleted successfully.");
-                        updateWorkListView(workListView, workTitles);
-                    } else {
-                        System.out.println("Failed to delete work.");
-                    }
+                    DBManager.deleteWork(selectedWork.getId());
+                    works.remove(selectedWork);
+                    selectedWork = null;
+                    workListView.getItems().remove(workListView.getSelectionModel().getSelectedIndex());
+                    titleField.clear();
+                    contentArea.clear();
+                    selectedTags.clear();
+                    System.out.println("Work deleted.");
                 }
             }
         });
-
-
-        Button deleteChapterButton = new Button("Delete Chapter");
-        deleteChapterButton.setOnAction(event -> {
-            if (selectedWork != null && selectedWork.getChapters().size() > 0) {
-                Chapter lastChapter = selectedWork.getChapters().get(selectedWork.getChapters().size() + 1);
-                Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                alert.setTitle("Delete Chapter Confirmation");
-                alert.setHeaderText(null);
-                alert.setContentText("Are you sure you want to delete the last chapter?");
-
-                Optional<ButtonType> result = alert.showAndWait();
-                if (result.isPresent() && result.get() == ButtonType.OK) {
-                    if (DBManager.deleteChapter(lastChapter.getId())) {
-                        selectedWork.getChapters().remove(lastChapter);
-                        refreshChapterNavigation();
-                        System.out.println("Chapter deleted successfully.");
-                        updateChapterIndicator(); 
-                    } else {
-                        System.out.println("Failed to delete chapter.");
-                    }
-                }
-            } else {
-                Alert alert = new Alert(Alert.AlertType.WARNING);
-                alert.setTitle("Delete Chapter Warning");
-                alert.setHeaderText(null);
-                alert.setContentText("No chapters to delete, or deletion not possible. Consider deleting the entire work.");
-                alert.showAndWait();
-            }
-        });
-
-        contentArea.textProperty().addListener((observable, oldValue, newValue) -> saveChapter());
-        titleField.textProperty().addListener((observable, oldValue, newValue) -> saveChapter());
-
 
         rightPane.add(new Label("Title:"), 0, 0);
         rightPane.add(titleField, 1, 0);
@@ -308,11 +291,7 @@ addChapterButton.setOnAction(event -> {
         rightPane.add(contentArea, 1, 1);
         rightPane.add(saveDraftButton, 0, 2);
         rightPane.add(publishButton, 1, 2);
-        rightPane.add(addChapterButton, 0, 3);
-        rightPane.add(deleteWorkButton, 1, 3);
-        rightPane.add(deleteChapterButton, 0, 4); 
-        rightPane.add(chapterIndicator, 1, 5); 
-        rightPane.add(chapterNavigation, 1, 5);
+        rightPane.add(deleteButton, 1, 3);
 
         VBox taggingBox = createTaggingButtons();
         rightPane.add(taggingBox, 2, 1); 
@@ -330,15 +309,34 @@ addChapterButton.setOnAction(event -> {
     private void saveChapter() {
         if (selectedWork != null) {
             int selectedIndex = chapterNavigation.getSelectionModel().getSelectedIndex();
-            if (selectedIndex >= 0 && selectedIndex < selectedWork.getChapters().size()) {
-                Chapter chapter = selectedWork.getChapters().get(selectedIndex);
-                chapter.setTitle(titleField.getText());
-                chapter.setContent(contentArea.getText());
-                DBManager.updateChapter(chapter); // Pastikan ada metode ini untuk menyimpan chapter
+            if (selectedIndex >= 0) {
+                if (selectedIndex == 0) {
+                    
+                    selectedWork.setTitle(titleField.getText());
+                    selectedWork.setContent(contentArea.getText());
+                    DBManager.updateWork(selectedWork); 
+                } else {
+                    
+                    Work chapterWork = null;
+                    int pageMarker = selectedWork.getPageMarker() + selectedIndex; 
+                    
+                    for (Work work : works) {
+                        if (work.getTitle().equals(selectedWork.getTitle()) && work.getPageMarker() == pageMarker) {
+                            chapterWork = work;
+                            break;
+                        }
+                    }
+                    if (chapterWork != null) {
+                        chapterWork.setTitle(titleField.getText());
+                        chapterWork.setContent(contentArea.getText());
+                        DBManager.updateWork(chapterWork); 
+                    } else {
+                        System.out.println("Chapter not found.");
+                    }
+                }
             }
         }
     }
-    
 
     private VBox createTaggingButtons() {
         VBox taggingBox = new VBox(20);
@@ -379,7 +377,7 @@ addChapterButton.setOnAction(event -> {
                 button.setStyle("");
             } else {
                 selectedTags.add(tag);
-                button.setStyle("-fx-background-color: #87CEEB;"); // Contoh gaya untuk tombol yang dipilih
+                button.setStyle("-fx-background-color: #87CEEB;"); 
             }
             System.out.println("Selected tags: " + selectedTags);
         });
@@ -393,60 +391,67 @@ addChapterButton.setOnAction(event -> {
             subButtons.getChildren().clear();
         }
     }
-
+    
+    
+    
     private void showWorkDetails(Work work) {
         if (work != null) {
             System.out.println("Selected work: " + work.getTitle());
-            System.out.println("Chapters: " + work.getChapters());
+            System.out.println("Chapters: " + work.getPageMarker());
             titleField.setText(work.getTitle());
             contentArea.setText(work.getContent());
             selectedTags.setAll(work.getTags().split(", "));
-            refreshChapterNavigation();
+            refreshChapterNavigation(work);
         }
     }
 
-    
-    
-
-    private void refreshChapterNavigation() {
-        if (chapterNavigation != null) {
-            chapterNavigation.getItems().clear();
-            chapterNavigation.getItems();
-            
-            if (selectedWork != null) {
-                for (int i = 0; i < selectedWork.getChapters().size(); i++) {
-                    Integer chapterIndex = i + 1;
-                    chapterNavigation.getItems().add(chapterIndex); 
-                }
-            }
-            chapterNavigation.getSelectionModel().selectFirst();
+    private void refreshChapterNavigation(Work work) {
+        chapterNavigation.getItems().clear();
+        chapterNavigation.getItems().add(0); // Tambahkan bab pertama
+        for (int i = 2; i <= work.getPageMarker(); i++) {
+            chapterNavigation.getItems().add(i); // Tambahkan bab berdasarkan pageMarker
         }
     }
+    
+
+    private void showChapterContent(Work selectedChapter) {
+        if (selectedChapter != null) {
+            titleField.setText(selectedChapter.getTitle());
+            contentArea.setText(selectedChapter.getContent());
+            chapterIndicator.setText("Page: " + selectedChapter.getPageMarker());
+        }
+    }
+    
+    
 
     private void addChapter(Work work, String title, String content) {
-        int nextChapterNumber = work.getChapters().size() + 2;
+        int nextChapterNumber = work.getPageMarker() + 1; 
         Chapter newChapter = new Chapter(0, work.getId(), nextChapterNumber, title, content);
         if (DBManager.addChapter(newChapter)) {
-            work.getChapters().add(newChapter);
             System.out.println("Chapter added successfully.");
         } else {
             System.out.println("Failed to add chapter.");
         }
     }
+    
 
     private void updateWorkListView(ListView<String> workListView, ObservableList<String> workTitles) {
         workTitles.clear();
         for (Work work : works) {
-            workTitles.add(work.getTitle() + (work.isDraft() ? " (Draft)" : ""));
+            if (work.getPageMarker() == 1) {
+                workTitles.add(work.getTitle() + (work.isDraft() ? " (Draft)" : ""));
+            }
         }
         workListView.setItems(workTitles);
     }
+    
 
     private void updateChapterNavigation() {
         if (selectedWork != null) {
             ObservableList<Integer> chapterNumbers = FXCollections.observableArrayList();
-            chapterNumbers.add(1); // Add chapter 1
-            for (int i = 2; i <= selectedWork.getChapters().size() + 1; i++) {
+            chapterNumbers.add(1); 
+            int lastPage = selectedWork.getPageMarker();
+            for (int i = 2; i <= lastPage; i++) {
                 chapterNumbers.add(i);
             }
             chapterNavigation.setItems(chapterNumbers);
@@ -454,7 +459,8 @@ addChapterButton.setOnAction(event -> {
         } else {
             chapterNavigation.getItems().clear();
         }
-    }    
+    }
+    
 
     private void saveDraft(Work work) {
         work.setUserId(currentUser.getId());
@@ -476,11 +482,9 @@ addChapterButton.setOnAction(event -> {
 
     private void updateChapterIndicator() {
         if (selectedWork != null) {
-            int currentPage = selectedWork.getChapters().size();
-            int totalPages = selectedWork.getChapters().size();
-            chapterIndicator.setText("Chapter: " + currentPage + " / " + totalPages);
+            chapterIndicator.setText("Chapter: " + selectedWork.getPageMarker());
         } else {
-            chapterIndicator.setText("No chapters available.");
+            chapterIndicator.setText("Chapter: None");
         }
     }
-}
+}    
