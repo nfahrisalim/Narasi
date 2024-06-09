@@ -116,8 +116,8 @@ B. User
 
 
 ## Pengujian Pada Aplikasi
-![Table1](https://github.com/CSE-9124/TravelReview-project/blob/main/readme/Table1.png)
-![Table2](https://github.com/CSE-9124/TravelReview-project/blob/main/readme/Table2.png)
+![Table1](https://github.com/DissentPhase/Narasi/blob/main/README/14%20TABLE%201.png)
+![Table2](https://github.com/DissentPhase/Narasi/blob/main/README/15%20TABLE%202.png)
 
 
 
