@@ -1,12 +1,5 @@
 # Narasi
 
-## Group Name : Cicfo All-Star
-Nama Anggota:
-
-  1. H071231031 – Muh. Naufal Fahri Salim
-  2. H071231057 – Reynaldy Arungla’bi’
-  3. H071231045 – Muh. Aipun Pratama
-
 ## Tema yang dipilih : Books, Reference, and Education
 
 ## Nama Pendamping : Muh. Resky Fadil
